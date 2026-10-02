@@ -21,6 +21,10 @@ namespace FogboundMaze
             {
                 viewCamera = gameObject.AddComponent<Camera>();
             }
+            if (!TryGetComponent<AudioListener>(out _))
+            {
+                gameObject.AddComponent<AudioListener>();
+            }
             gameObject.tag = "MainCamera";
             viewCamera.fieldOfView = 68f;
             viewCamera.clearFlags = CameraClearFlags.SolidColor;

@@ -87,7 +87,7 @@ public static class FogboundProjectBuilder
     {
         PlayerSettings.companyName = "FF1333";
         PlayerSettings.productName = "Fogbound Maze";
-        PlayerSettings.bundleVersion = "0.2.0";
+        PlayerSettings.bundleVersion = "1.0.0";
         PlayerSettings.defaultScreenWidth = 1280;
         PlayerSettings.defaultScreenHeight = 720;
         PlayerSettings.defaultIsFullScreen = false;
@@ -98,6 +98,8 @@ public static class FogboundProjectBuilder
         PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
         PlayerSettings.allowedAutorotateToLandscapeLeft = true;
         PlayerSettings.allowedAutorotateToLandscapeRight = true;
+        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+        PlayerSettings.WebGL.decompressionFallback = true;
 
         var settings = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset");
         if (settings.Length > 0)
