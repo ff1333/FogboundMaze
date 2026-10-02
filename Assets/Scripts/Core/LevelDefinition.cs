@@ -12,6 +12,7 @@ namespace FogboundMaze
         [Min(4)] public int height;
         public int seed;
         [Range(1, 32)] public int mazeCandidateCount;
+        [Min(4)] public int targetRouteLength;
         [Range(0f, 1f)] public float routeWeight;
         [Range(0f, 1f)] public float deadEndWeight;
         [Range(0f, 1f)] public float turnWeight;
@@ -50,16 +51,16 @@ namespace FogboundMaze
         {
             return new[]
             {
-                Make(1, 7, 7, 1101, 4, 4, 6.0f, 0.00f, 0.002f, false, false),
-                Make(2, 8, 8, 2203, 6, 5, 5.4f, 0.00f, 0.004f, false, false),
-                Make(3, 9, 9, 3307, 8, 6, 4.9f, 0.00f, 0.007f, false, false),
-                Make(4, 10, 10, 4409, 10, 7, 4.4f, 0.00f, 0.016f, false, false),
-                Make(5, 11, 10, 5513, 12, 8, 4.0f, 0.14f, 0.020f, false, false),
-                Make(6, 11, 11, 6619, 14, 9, 3.7f, 0.18f, 0.023f, true, false),
-                Make(7, 12, 11, 7723, 16, 10, 3.4f, 0.22f, 0.026f, true, true),
-                Make(8, 13, 12, 8837, 19, 11, 3.1f, 0.26f, 0.030f, true, true),
-                Make(9, 14, 13, 9941, 22, 12, 2.8f, 0.31f, 0.034f, true, true),
-                Make(10, 15, 14, 10151, 26, 14, 2.5f, 0.38f, 0.038f, true, true)
+                Make(1, 7, 7, 1101, 6, 23, 4, 6.0f, 0.00f, 0.002f, false, false),
+                Make(2, 8, 8, 2203, 8, 31, 5, 5.4f, 0.00f, 0.004f, false, false),
+                Make(3, 9, 9, 3307, 10, 43, 6, 4.9f, 0.00f, 0.007f, false, false),
+                Make(4, 10, 10, 4409, 12, 55, 7, 4.4f, 0.00f, 0.016f, false, false),
+                Make(5, 11, 10, 5513, 15, 65, 8, 4.0f, 0.14f, 0.020f, false, false),
+                Make(6, 11, 11, 6619, 18, 75, 9, 3.7f, 0.18f, 0.023f, true, false),
+                Make(7, 12, 11, 7723, 20, 85, 10, 3.4f, 0.22f, 0.026f, true, true),
+                Make(8, 13, 12, 8837, 24, 97, 11, 3.1f, 0.26f, 0.030f, true, true),
+                Make(9, 14, 13, 9941, 28, 111, 12, 2.8f, 0.31f, 0.034f, true, true),
+                Make(10, 15, 14, 10151, 32, 127, 14, 2.5f, 0.38f, 0.038f, true, true)
             };
         }
 
@@ -69,6 +70,7 @@ namespace FogboundMaze
             int height,
             int seed,
             int mazeCandidateCount,
+            int targetRouteLength,
             int maxEnemies,
             float spawnInterval,
             float eliteChance,
@@ -83,6 +85,7 @@ namespace FogboundMaze
                 height = height,
                 seed = seed,
                 mazeCandidateCount = mazeCandidateCount,
+                targetRouteLength = targetRouteLength,
                 routeWeight = Mathf.Lerp(0.50f, 0.68f, (number - 1) / 9f),
                 deadEndWeight = Mathf.Lerp(0.18f, 0.12f, (number - 1) / 9f),
                 turnWeight = Mathf.Lerp(0.32f, 0.20f, (number - 1) / 9f),

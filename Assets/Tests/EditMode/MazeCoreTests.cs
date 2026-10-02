@@ -80,6 +80,7 @@ namespace FogboundMaze.Tests
                 Assert.That(levels[i].width * levels[i].height,
                     Is.GreaterThan(levels[i - 1].width * levels[i - 1].height));
                 Assert.That(levels[i].mazeCandidateCount, Is.GreaterThan(levels[i - 1].mazeCandidateCount));
+                Assert.That(levels[i].targetRouteLength, Is.GreaterThan(levels[i - 1].targetRouteLength));
             }
 
             var first = MazeGenerator.GenerateForLevel(levels[0]);
@@ -89,6 +90,20 @@ namespace FogboundMaze.Tests
             Assert.That(lastMetrics.SolutionLength, Is.GreaterThan(firstMetrics.SolutionLength));
             Assert.That(lastMetrics.Turns, Is.GreaterThan(firstMetrics.Turns));
             Assert.That(lastMetrics.DeadEnds, Is.GreaterThan(firstMetrics.DeadEnds));
+        }
+
+        [Test]
+        public void Campaign_MainRouteLengthIncreasesEveryLevel()
+        {
+            var previousLength = 0;
+            foreach (var level in LevelCatalog.CreateDefault())
+            {
+                var maze = MazeGenerator.GenerateForLevel(level);
+                var length = MazePathfinder.FindPath(maze, maze.Start, maze.Goal).Count;
+                Assert.That(length, Is.GreaterThan(previousLength),
+                    $"Level {level.levelNumber} route must be longer than the previous level.");
+                previousLength = length;
+            }
         }
 
         private static string Fingerprint(MazeLayout maze)

@@ -1,0 +1,55 @@
+using System;
+using System.IO;
+using UnityEditor;
+using UnityEditor.Build.Reporting;
+using UnityEngine;
+
+public static class FogboundPlatformBuilder
+{
+    private static readonly string[] Scenes = { "Assets/Scenes/Main.unity" };
+
+    public static void BuildWindowsDevelopment()
+    {
+        Build(BuildTarget.StandaloneWindows64, "Builds/Windows/Development/FogboundMaze.exe",
+            BuildOptions.Development | BuildOptions.AllowDebugging);
+    }
+
+    public static void BuildWindowsRelease()
+    {
+        Build(BuildTarget.StandaloneWindows64, "Builds/Windows/v1.0.0/FogboundMaze.exe", BuildOptions.None);
+    }
+
+    public static void BuildWebGLRelease()
+    {
+        Build(BuildTarget.WebGL, "Builds/WebGL/v1.0.0", BuildOptions.None);
+    }
+
+    public static void BuildAndroidRelease()
+    {
+        EditorUserBuildSettings.buildAppBundle = false;
+        PlayerSettings.Android.bundleVersionCode = 1;
+        Build(BuildTarget.Android, "Builds/Android/FogboundMaze-v1.0.0.apk", BuildOptions.None);
+    }
+
+    private static void Build(BuildTarget target, string location, BuildOptions options)
+    {
+        var directory = Path.GetDirectoryName(location);
+        if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+        {
+            scenes = Scenes,
+            target = target,
+            locationPathName = location,
+            options = options
+        });
+
+        var summary = report.summary;
+        Debug.Log($"FOGBOUND_PLATFORM_BUILD target={target} result={summary.result} " +
+                  $"errors={summary.totalErrors} warnings={summary.totalWarnings} size={summary.totalSize}");
+        if (summary.result != BuildResult.Succeeded)
+        {
+            throw new InvalidOperationException($"{target} build failed with {summary.totalErrors} errors.");
+        }
+    }
+}
+

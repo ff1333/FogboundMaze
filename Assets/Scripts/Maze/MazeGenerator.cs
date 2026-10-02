@@ -10,15 +10,18 @@ namespace FogboundMaze
         {
             level.Validate();
             MazeLayout bestLayout = null;
+            var bestDistance = int.MaxValue;
             var bestScore = float.MinValue;
 
             for (var i = 0; i < level.mazeCandidateCount; i++)
             {
                 var candidate = Generate(level.width, level.height, level.seed + i * 7919);
-                var score = MazeComplexity.Measure(candidate, level).Score;
-                if (score > bestScore)
+                var metrics = MazeComplexity.Measure(candidate, level);
+                var distance = Mathf.Abs(metrics.SolutionLength - level.targetRouteLength);
+                if (distance < bestDistance || (distance == bestDistance && metrics.Score > bestScore))
                 {
-                    bestScore = score;
+                    bestDistance = distance;
+                    bestScore = metrics.Score;
                     bestLayout = candidate;
                 }
             }

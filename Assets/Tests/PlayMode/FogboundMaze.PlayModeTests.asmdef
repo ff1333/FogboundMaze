@@ -1,0 +1,11 @@
+{
+    "name": "FogboundMaze.PlayModeTests",
+    "rootNamespace": "FogboundMaze.Tests",
+    "references": [
+        "FogboundMaze.Runtime"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
+

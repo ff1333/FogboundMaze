@@ -1,5 +1,8 @@
 {
     "name": "FogboundMaze.Runtime",
-    "rootNamespace": "FogboundMaze"
+    "rootNamespace": "FogboundMaze",
+    "references": [
+        "Unity.InputSystem",
+        "Unity.UGUI"
+    ]
 }
-
