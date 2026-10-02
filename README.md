@@ -25,3 +25,11 @@ enters through the start gate, survives zombie attacks, and reaches the exit.
 Development evidence, architecture notes, tests and release instructions live
 under `docs/`.
 
+## Release Status
+
+- Version: `v1.0.0`
+- EditMode tests: `8/8 PASS`
+- PlayMode tests: `5/5 PASS`
+- Builds: Windows, WebGL and Android (`0 errors`, `0 warnings`)
+- Start here: [`docs/README.md`](docs/README.md)
+- Release checklist: [`docs/04_BUILD_AND_RELEASE.md`](docs/04_BUILD_AND_RELEASE.md)
