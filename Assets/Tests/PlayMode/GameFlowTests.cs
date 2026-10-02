@@ -29,6 +29,61 @@ namespace FogboundMaze.Tests
         }
 
         [UnityTest]
+        public IEnumerator UnifiedInput_MovesPlayerAndSwitchesCameraMode()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Pistol);
+            director.BeginRun();
+            var start = director.Player.transform.position;
+            director.Input.SetMobileMove(Vector2.right);
+            yield return new WaitForSeconds(0.45f);
+            director.Input.SetMobileMove(Vector2.zero);
+            var horizontalDelta = director.Player.transform.position - start;
+            horizontalDelta.y = 0f;
+            Assert.That(horizontalDelta.magnitude, Is.GreaterThan(0.05f));
+
+            Assert.That(director.CameraRig.IsFirstPerson, Is.False);
+            director.Input.PressMobileToggle();
+            yield return null;
+            yield return null;
+            Assert.That(director.CameraRig.IsFirstPerson, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator MiasmaOutsideSafeLight_DamagesPlayer()
+        {
+            var director = GameDirector.Instance;
+            for (var level = 2; level <= 7; level++)
+            {
+                director.NextLevel();
+                yield return null;
+            }
+            director.SelectWeapon(WeaponType.Machete);
+            director.BeginRun();
+
+            var unsafePosition = FindUnsafeCell(director);
+            Assert.That(unsafePosition.HasValue, Is.True);
+            director.Player.transform.position = unsafePosition.Value + Vector3.up * 0.2f;
+            var before = director.Player.Health.Current;
+            yield return new WaitForSeconds(0.45f);
+            Assert.That(director.Player.Health.Current, Is.LessThan(before));
+        }
+
+        private static Vector3? FindUnsafeCell(GameDirector director)
+        {
+            for (var y = 0; y < director.World.Layout.Height; y++)
+            {
+                for (var x = 0; x < director.World.Layout.Width; x++)
+                {
+                    var position = director.World.CellToWorld(new Vector2Int(x, y));
+                    if (!director.World.IsWithinSafeLight(position, director.CurrentLevel.safeLightRadius))
+                        return position;
+                }
+            }
+            return null;
+        }
+
+        [UnityTest]
         public IEnumerator StartChooseEnterAndWin_CompletesCoreLoop()
         {
             var director = GameDirector.Instance;

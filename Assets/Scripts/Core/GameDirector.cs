@@ -27,6 +27,8 @@ namespace FogboundMaze
         public LevelDefinition CurrentLevel => level;
         public PlayerController Player => player;
         public MazeWorld World => world;
+        public GameInput Input => input;
+        public CameraRig CameraRig => cameraRig;
         public int Kills => kills;
         public float Elapsed => elapsed;
         public bool IsPlayerSafe => !level.miasma || world.IsWithinSafeLight(player.transform.position, level.safeLightRadius);
