@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="FogboundMaze.Runtime.csproj" />
+  <Project Path="FogboundMaze.EditModeTests.csproj" />
+</Solution>

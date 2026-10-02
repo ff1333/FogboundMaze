@@ -1,0 +1,13 @@
+{
+    "name": "FogboundMaze.EditModeTests",
+    "rootNamespace": "FogboundMaze.Tests",
+    "references": [
+        "FogboundMaze.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

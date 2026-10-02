@@ -1,0 +1,101 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace FogboundMaze
+{
+    [Serializable]
+    public sealed class LevelDefinition
+    {
+        [Min(1)] public int levelNumber;
+        [Min(4)] public int width;
+        [Min(4)] public int height;
+        public int seed;
+        [Range(1, 32)] public int mazeCandidateCount;
+        [Range(0f, 1f)] public float routeWeight;
+        [Range(0f, 1f)] public float deadEndWeight;
+        [Range(0f, 1f)] public float turnWeight;
+        [Min(1)] public int maxEnemies;
+        [Min(0.5f)] public float spawnInterval;
+        [Range(0f, 1f)] public float eliteChance;
+        [Range(0f, 0.08f)] public float fogDensity;
+        public bool dayNightCycle;
+        [Min(20f)] public float dayDuration;
+        public bool miasma;
+        [Min(0f)] public float miasmaDamagePerSecond;
+        [Min(2f)] public float safeLightRadius;
+
+        public void Validate()
+        {
+            if (levelNumber < 1 || width < 4 || height < 4 || maxEnemies < 1)
+            {
+                throw new InvalidOperationException("Level dimensions and enemy limits must be positive.");
+            }
+
+            if (spawnInterval <= 0f || eliteChance < 0f || eliteChance > 1f)
+            {
+                throw new InvalidOperationException("Level combat values are outside the supported range.");
+            }
+
+            if (miasma && (miasmaDamagePerSecond <= 0f || safeLightRadius < 2f))
+            {
+                throw new InvalidOperationException("Miasma levels require damage and a usable safe-light radius.");
+            }
+        }
+    }
+
+    public static class LevelCatalog
+    {
+        public static IReadOnlyList<LevelDefinition> CreateDefault()
+        {
+            return new[]
+            {
+                Make(1, 7, 7, 1101, 4, 4, 6.0f, 0.00f, 0.002f, false, false),
+                Make(2, 8, 8, 2203, 6, 5, 5.4f, 0.00f, 0.004f, false, false),
+                Make(3, 9, 9, 3307, 8, 6, 4.9f, 0.00f, 0.007f, false, false),
+                Make(4, 10, 10, 4409, 10, 7, 4.4f, 0.00f, 0.016f, false, false),
+                Make(5, 11, 10, 5513, 12, 8, 4.0f, 0.14f, 0.020f, false, false),
+                Make(6, 11, 11, 6619, 14, 9, 3.7f, 0.18f, 0.023f, true, false),
+                Make(7, 12, 11, 7723, 16, 10, 3.4f, 0.22f, 0.026f, true, true),
+                Make(8, 13, 12, 8837, 19, 11, 3.1f, 0.26f, 0.030f, true, true),
+                Make(9, 14, 13, 9941, 22, 12, 2.8f, 0.31f, 0.034f, true, true),
+                Make(10, 15, 14, 10151, 26, 14, 2.5f, 0.38f, 0.038f, true, true)
+            };
+        }
+
+        private static LevelDefinition Make(
+            int number,
+            int width,
+            int height,
+            int seed,
+            int mazeCandidateCount,
+            int maxEnemies,
+            float spawnInterval,
+            float eliteChance,
+            float fogDensity,
+            bool dayNight,
+            bool miasma)
+        {
+            return new LevelDefinition
+            {
+                levelNumber = number,
+                width = width,
+                height = height,
+                seed = seed,
+                mazeCandidateCount = mazeCandidateCount,
+                routeWeight = Mathf.Lerp(0.50f, 0.68f, (number - 1) / 9f),
+                deadEndWeight = Mathf.Lerp(0.18f, 0.12f, (number - 1) / 9f),
+                turnWeight = Mathf.Lerp(0.32f, 0.20f, (number - 1) / 9f),
+                maxEnemies = maxEnemies,
+                spawnInterval = spawnInterval,
+                eliteChance = eliteChance,
+                fogDensity = fogDensity,
+                dayNightCycle = dayNight,
+                dayDuration = Mathf.Lerp(130f, 75f, (number - 1) / 9f),
+                miasma = miasma,
+                miasmaDamagePerSecond = miasma ? Mathf.Lerp(4f, 8f, (number - 7) / 3f) : 0f,
+                safeLightRadius = miasma ? Mathf.Lerp(7f, 5f, (number - 7) / 3f) : 7f
+            };
+        }
+    }
+}
