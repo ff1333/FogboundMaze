@@ -18,6 +18,16 @@ namespace FogboundMaze
             }
         }
 
+        public int Capacity => enemies.Count;
+
+        public void Prewarm(int count)
+        {
+            while (enemies.Count < count)
+            {
+                CreateEnemy();
+            }
+        }
+
         public EnemyAgent Spawn(PlayerController player, MazeWorld world, Vector3 position, bool elite)
         {
             var enemy = enemies.Find(value => !value.gameObject.activeSelf) ?? CreateEnemy();

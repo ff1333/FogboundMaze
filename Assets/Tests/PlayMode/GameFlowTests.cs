@@ -12,9 +12,20 @@ namespace FogboundMaze.Tests
         public IEnumerator LoadMainScene()
         {
             PlayerPrefs.DeleteKey("Fogbound.SelectedLevel");
+            PlayerPrefs.DeleteKey("Fogbound.UnlockedLevel");
             SceneManager.LoadScene("Main");
             yield return null;
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator PlayingRun_SpawnsEnemyAfterVisibleTelegraphDelay()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Machete);
+            director.BeginRun();
+            yield return new WaitForSeconds(3.1f);
+            Assert.That(director.ActiveEnemyCount, Is.GreaterThanOrEqualTo(1));
         }
 
         [UnityTest]
@@ -52,6 +63,7 @@ namespace FogboundMaze.Tests
             Assert.That(director.World.Layout.Height, Is.EqualTo(14));
             Assert.That(director.CurrentLevel.miasma, Is.True);
             Assert.That(director.World.SafeLights, Is.Not.Empty);
+            Assert.That(director.EnemyPoolCapacity, Is.GreaterThanOrEqualTo(14));
         }
     }
 }

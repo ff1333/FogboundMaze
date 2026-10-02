@@ -12,6 +12,7 @@ namespace FogboundMaze
         private float nextAttack;
         private int ammunition;
         private bool reloading;
+        private AudioSource audioSource;
 
         public WeaponType Type => type;
         public int Ammunition => ammunition;
@@ -25,6 +26,8 @@ namespace FogboundMaze
             mount = new GameObject("Weapon Mount").transform;
             mount.SetParent(transform, false);
             mount.localPosition = new Vector3(0.42f, 1.15f, 0.45f);
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.spatialBlend = 0f;
         }
 
         public void Equip(WeaponType weaponType)
@@ -80,16 +83,22 @@ namespace FogboundMaze
 
                 ammunition--;
                 nextAttack = Time.time + 0.32f;
+                var end = viewCamera.transform.position + viewCamera.transform.forward * 28f;
                 if (Physics.Raycast(viewCamera.transform.position, viewCamera.transform.forward, out var hit, 28f,
                         ~0, QueryTriggerInteraction.Ignore))
                 {
+                    end = hit.point;
                     hit.collider.GetComponentInParent<EnemyAgent>()?.TakeDamage(34f);
+                    CombatEffects.Impact(hit.point, hit.normal);
                 }
+                CombatEffects.Tracer(viewCamera.transform.position + viewCamera.transform.forward * 0.4f, end);
+                audioSource.PlayOneShot(ProceduralAudio.Pistol);
                 GameDirector.Instance?.Hud?.FlashCrosshair();
             }
             else
             {
                 nextAttack = Time.time + 0.62f;
+                audioSource.PlayOneShot(ProceduralAudio.Machete);
                 var center = transform.position + transform.forward * 1.25f + Vector3.up;
                 foreach (var hit in Physics.OverlapSphere(center, 1.55f, ~0, QueryTriggerInteraction.Ignore))
                 {
@@ -97,6 +106,7 @@ namespace FogboundMaze
                     if (enemy != null && Vector3.Dot(transform.forward, (enemy.transform.position - transform.position).normalized) > 0.05f)
                     {
                         enemy.TakeDamage(58f);
+                        CombatEffects.Impact(enemy.transform.position + Vector3.up, -transform.forward);
                     }
                 }
             }

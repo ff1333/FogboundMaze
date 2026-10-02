@@ -18,6 +18,7 @@ namespace FogboundMaze
         private float nextSpawn;
         private float elapsed;
         private int kills;
+        private int pendingSpawns;
         private int currentLevel;
         private System.Random random;
 
@@ -28,13 +29,17 @@ namespace FogboundMaze
         public MazeWorld World => world;
         public int Kills => kills;
         public float Elapsed => elapsed;
+        public bool IsPlayerSafe => !level.miasma || world.IsWithinSafeLight(player.transform.position, level.safeLightRadius);
+        public int ActiveEnemyCount => pool.ActiveCount;
+        public int EnemyPoolCapacity => pool.Capacity;
 
         private void Awake()
         {
             Instance = this;
             levels = LevelCatalog.CreateDefault();
             BuildPersistentSystems();
-            LoadLevel(Mathf.Clamp(PlayerPrefs.GetInt("Fogbound.SelectedLevel", 1), 1, 10));
+            var unlocked = PlayerPrefs.GetInt("Fogbound.UnlockedLevel", 1);
+            LoadLevel(Mathf.Clamp(PlayerPrefs.GetInt("Fogbound.SelectedLevel", unlocked), 1, 10));
             if (System.Array.Exists(System.Environment.GetCommandLineArgs(), value => value == "-fogboundSmoke"))
             {
                 gameObject.AddComponent<RuntimeSmokeCapture>();
@@ -54,10 +59,10 @@ namespace FogboundMaze
             }
 
             elapsed += Time.deltaTime;
-            if (Time.time >= nextSpawn && pool.ActiveCount < level.maxEnemies)
+            if (Time.time >= nextSpawn && pool.ActiveCount + pendingSpawns < level.maxEnemies)
             {
                 nextSpawn = Time.time + level.spawnInterval;
-                SpawnEnemy();
+                BeginEnemySpawn();
             }
 
             if (level.miasma && world.IsInside(player.transform.position)
@@ -91,6 +96,7 @@ namespace FogboundMaze
             Phase = GamePhase.Won;
             var unlocked = Mathf.Max(PlayerPrefs.GetInt("Fogbound.UnlockedLevel", 1), Mathf.Min(10, currentLevel + 1));
             PlayerPrefs.SetInt("Fogbound.UnlockedLevel", unlocked);
+            PlayerPrefs.SetInt("Fogbound.SelectedLevel", Mathf.Min(10, currentLevel + 1));
             PlayerPrefs.Save();
             Hud.ShowResult(true, currentLevel, elapsed, kills);
             SetCursorLocked(false);
@@ -119,6 +125,8 @@ namespace FogboundMaze
             level = levels[number - 1];
             random = new System.Random(level.seed + 97);
             pool.DespawnAll();
+            pool.Prewarm(level.maxEnemies);
+            pendingSpawns = 0;
             world.Build(level);
             player.transform.position = world.StartPosition + Vector3.up * 0.2f;
             player.transform.rotation = Quaternion.identity;
@@ -128,6 +136,8 @@ namespace FogboundMaze
             elapsed = 0f;
             kills = 0;
             Phase = GamePhase.Staging;
+            PlayerPrefs.SetInt("Fogbound.SelectedLevel", currentLevel);
+            PlayerPrefs.Save();
             Hud.ShowWeaponSelection(number);
             SetCursorLocked(false);
         }
@@ -178,7 +188,7 @@ namespace FogboundMaze
             return root.AddComponent<PlayerController>();
         }
 
-        private void SpawnEnemy()
+        private void BeginEnemySpawn()
         {
             for (var attempt = 0; attempt < 12; attempt++)
             {
@@ -186,7 +196,16 @@ namespace FogboundMaze
                 var position = world.CellToWorld(cell);
                 if (cell == world.Layout.Start || cell == world.Layout.Goal || Vector3.Distance(position, player.transform.position) < 12f)
                     continue;
-                pool.Spawn(player, world, position, random.NextDouble() < level.eliteChance);
+                var elite = random.NextDouble() < level.eliteChance;
+                pendingSpawns++;
+                SpawnTelegraph.Create(position, elite, () =>
+                {
+                    pendingSpawns = Mathf.Max(0, pendingSpawns - 1);
+                    if (Phase == GamePhase.Playing)
+                    {
+                        pool.Spawn(player, world, position, elite);
+                    }
+                });
                 return;
             }
         }

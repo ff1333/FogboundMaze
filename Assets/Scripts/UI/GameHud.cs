@@ -57,11 +57,9 @@ namespace FogboundMaze
                 ? $"PISTOL  {(player.Weapon.IsReloading ? "RELOAD" : player.Weapon.Ammunition.ToString("00"))}"
                 : "MACHETE";
             statusText.text = director.CurrentLevel.miasma
-                ? (director.CurrentLevel.miasma && director.CurrentLevel.safeLightRadius > 0f
-                    ? "MIASMA ACTIVE"
-                    : string.Empty)
+                ? (director.IsPlayerSafe ? "LIGHT SAFE" : "MIASMA EXPOSED")
                 : string.Empty;
-            statusText.color = director.CurrentLevel.miasma ? Warning : Accent;
+            statusText.color = director.IsPlayerSafe ? Accent : Warning;
         }
 
         public void ShowWeaponSelection(int level)
