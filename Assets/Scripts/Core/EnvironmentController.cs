@@ -44,8 +44,8 @@ namespace FogboundMaze
                 ? Mathf.Clamp01(Mathf.Sin(cycle * Mathf.PI * 2f) * 0.55f + 0.5f)
                 : 1f;
             sun.transform.rotation = Quaternion.Euler(cycle * 360f - 90f, 28f, 0f);
-            sun.intensity = Mathf.Lerp(0.16f, 1.15f, daylight);
-            RenderSettings.ambientLight = Color.Lerp(new Color(0.035f, 0.05f, 0.08f), new Color(0.24f, 0.27f, 0.25f), daylight);
+            sun.intensity = Mathf.Lerp(0.2f, 1.25f, daylight);
+            RenderSettings.ambientLight = Color.Lerp(new Color(0.075f, 0.09f, 0.1f), new Color(0.32f, 0.34f, 0.31f), daylight);
         }
     }
 }

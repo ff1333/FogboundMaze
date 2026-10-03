@@ -8,16 +8,21 @@ namespace FogboundMaze
         private PlayerController owner;
         private Camera viewCamera;
         private Transform mount;
+        private Transform viewMount;
+        private Transform worldWeapon;
+        private Transform viewWeapon;
         private WeaponType type;
         private float nextAttack;
         private int ammunition;
         private bool reloading;
         private AudioSource audioSource;
+        private bool swinging;
 
         public WeaponType Type => type;
         public int Ammunition => ammunition;
         public int MagazineSize => type == WeaponType.Pistol ? 10 : 0;
         public bool IsReloading => reloading;
+        public bool IsSwinging => swinging;
 
         public void Initialize(PlayerController player, Camera camera)
         {
@@ -26,25 +31,70 @@ namespace FogboundMaze
             mount = new GameObject("Weapon Mount").transform;
             mount.SetParent(transform, false);
             mount.localPosition = new Vector3(0.42f, 1.15f, 0.45f);
+            viewMount = new GameObject("First Person Weapon Mount").transform;
+            viewMount.SetParent(viewCamera.transform, false);
+            viewMount.localPosition = new Vector3(0.42f, -0.4f, 0.85f);
             audioSource = gameObject.AddComponent<AudioSource>();
             audioSource.spatialBlend = 0f;
         }
 
+        private void LateUpdate()
+        {
+            var firstPerson = viewCamera.GetComponent<CameraRig>().IsFirstPerson;
+            mount.gameObject.SetActive(!firstPerson);
+            viewMount.gameObject.SetActive(firstPerson);
+        }
+
         public void Equip(WeaponType weaponType)
         {
+            StopAllCoroutines();
+            reloading = false;
+            swinging = false;
+            nextAttack = 0f;
             type = weaponType;
             ammunition = MagazineSize;
             foreach (Transform child in mount) Destroy(child.gameObject);
+            foreach (Transform child in viewMount) Destroy(child.gameObject);
+            worldWeapon = null;
+            viewWeapon = null;
             if (type == WeaponType.None)
             {
                 return;
             }
-            var material = RuntimeArt.Material(type.ToString(),
-                type == WeaponType.Pistol ? new Color(0.2f, 0.7f, 0.82f) : new Color(0.85f, 0.35f, 0.16f),
-                0.55f, 0.48f);
-            var weapon = RuntimeArt.Primitive(PrimitiveType.Cube, type.ToString(), mount, Vector3.zero,
-                type == WeaponType.Pistol ? new Vector3(0.18f, 0.22f, 0.65f) : new Vector3(0.1f, 0.08f, 1.2f), material, false);
-            if (type == WeaponType.Machete) weapon.transform.localRotation = Quaternion.Euler(-12f, 0f, 0f);
+            worldWeapon = CreateWeaponModel(mount, type);
+            viewWeapon = CreateWeaponModel(viewMount, type);
+        }
+
+        private Transform CreateWeaponModel(Transform parent, WeaponType weaponType)
+        {
+            var root = new GameObject(weaponType.ToString()).transform;
+            root.SetParent(parent, false);
+            root.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            var metal = RuntimeArt.Material("Weapon Metal", weaponType == WeaponType.Pistol
+                ? new Color(0.18f, 0.72f, 0.84f) : new Color(0.83f, 0.87f, 0.78f), 0.55f, 0.48f);
+            var grip = RuntimeArt.Material("Weapon Grip", new Color(0.14f, 0.18f, 0.19f), 0.1f, 0.3f);
+            if (weaponType == WeaponType.Pistol)
+            {
+                ModelPart(root, "Slide", new Vector3(0f, 0f, 0.16f), new Vector3(0.16f, 0.16f, 0.5f), metal);
+                ModelPart(root, "Barrel", new Vector3(0f, -0.03f, 0.44f), new Vector3(0.11f, 0.11f, 0.32f), grip);
+                ModelPart(root, "Grip", new Vector3(0f, -0.23f, -0.05f), new Vector3(0.14f, 0.32f, 0.16f), grip);
+                ModelPart(root, "Rear Sight", new Vector3(0f, 0.105f, -0.04f), new Vector3(0.12f, 0.055f, 0.055f), grip);
+                ModelPart(root, "Front Sight", new Vector3(0f, 0.105f, 0.37f), new Vector3(0.07f, 0.055f, 0.045f), grip);
+                ModelPart(root, "Trigger Guard", new Vector3(0f, -0.14f, 0.12f), new Vector3(0.11f, 0.045f, 0.17f), grip);
+            }
+            else
+            {
+                ModelPart(root, "Handle", new Vector3(0f, 0.06f, 0f), new Vector3(0.12f, 0.35f, 0.12f), grip);
+                ModelPart(root, "Blade", new Vector3(0f, 0.64f, 0f), new Vector3(0.13f, 0.85f, 0.05f), metal);
+                root.localRotation = Quaternion.Euler(-20f, 0f, -20f);
+            }
+            return root;
+        }
+
+        private static void ModelPart(Transform parent, string name, Vector3 position, Vector3 scale, Material material)
+        {
+            var part = RuntimeArt.Primitive(PrimitiveType.Cube, name, parent, position, scale, material, false);
+            part.layer = LayerMask.NameToLayer("Ignore Raycast");
         }
 
         public void Tick(bool held, bool pressed, bool reloadPressed)
@@ -83,33 +133,103 @@ namespace FogboundMaze
 
                 ammunition--;
                 nextAttack = Time.time + 0.32f;
-                var end = viewCamera.transform.position + viewCamera.transform.forward * 28f;
-                if (Physics.Raycast(viewCamera.transform.position, viewCamera.transform.forward, out var hit, 28f,
-                        ~0, QueryTriggerInteraction.Ignore))
+                var aim = new Ray(viewCamera.transform.position, viewCamera.transform.forward);
+                var target = aim.GetPoint(28f);
+                if (Physics.Raycast(aim, out var cameraHit, 28f,
+                        Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                {
+                    target = cameraHit.point;
+                }
+                var muzzle = (viewCamera.GetComponent<CameraRig>().IsFirstPerson ? viewMount : mount)
+                    .TransformPoint(new Vector3(0f, 0f, 0.58f));
+                var end = target;
+                var hitEnemy = false;
+                var direction = target - muzzle;
+                if (direction.sqrMagnitude > 0.001f && Physics.Raycast(muzzle, direction.normalized, out var hit,
+                        direction.magnitude + 0.05f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
                 {
                     end = hit.point;
-                    hit.collider.GetComponentInParent<EnemyAgent>()?.TakeDamage(34f);
+                    var enemy = hit.collider.GetComponentInParent<EnemyAgent>();
+                    if (enemy != null && enemy.IsActive)
+                    {
+                        enemy.TakeDamage(34f);
+                        hitEnemy = true;
+                    }
                     CombatEffects.Impact(hit.point, hit.normal);
                 }
-                CombatEffects.Tracer(viewCamera.transform.position + viewCamera.transform.forward * 0.4f, end);
+                CombatEffects.Tracer(muzzle, end);
+                CombatEffects.Impact(muzzle, viewCamera.transform.forward);
+                StartCoroutine(Recoil());
                 audioSource.PlayOneShot(ProceduralAudio.Pistol);
-                GameDirector.Instance?.Hud?.FlashCrosshair();
+                if (hitEnemy) GameDirector.Instance?.Hud?.FlashCrosshair();
             }
             else
             {
                 nextAttack = Time.time + 0.62f;
                 audioSource.PlayOneShot(ProceduralAudio.Machete);
-                var center = transform.position + transform.forward * 1.25f + Vector3.up;
+                StartCoroutine(Swing());
+                var forward = viewCamera.transform.forward;
+                forward.y = 0f;
+                forward.Normalize();
+                var center = transform.position + forward * 1.25f + Vector3.up;
                 foreach (var hit in Physics.OverlapSphere(center, 1.55f, ~0, QueryTriggerInteraction.Ignore))
                 {
                     var enemy = hit.GetComponentInParent<EnemyAgent>();
-                    if (enemy != null && Vector3.Dot(transform.forward, (enemy.transform.position - transform.position).normalized) > 0.05f)
+                    if (enemy == null || !enemy.IsActive) continue;
+                    var delta = enemy.transform.position - transform.position;
+                    delta.y = 0f;
+                    if (Vector3.Dot(forward, delta.normalized) < 0.35f) continue;
+                    if (Physics.Linecast(transform.position + Vector3.up * 1.45f,
+                            enemy.transform.position + Vector3.up * 0.7f, out var obstruction,
+                            Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                        && obstruction.collider.GetComponentInParent<EnemyAgent>() == enemy)
                     {
                         enemy.TakeDamage(58f);
-                        CombatEffects.Impact(enemy.transform.position + Vector3.up, -transform.forward);
+                        CombatEffects.Impact(enemy.transform.position + Vector3.up, -forward);
+                        GameDirector.Instance?.Hud?.FlashCrosshair();
                     }
                 }
             }
+        }
+
+        private IEnumerator Recoil()
+        {
+            var kick = Quaternion.Euler(-11f, 0f, 0f);
+            if (worldWeapon != null) worldWeapon.localRotation = kick;
+            if (viewWeapon != null) viewWeapon.localRotation = kick;
+            for (var time = 0f; time < 0.16f; time += Time.deltaTime)
+            {
+                var rotation = Quaternion.Slerp(kick, Quaternion.identity, time / 0.16f);
+                if (worldWeapon != null) worldWeapon.localRotation = rotation;
+                if (viewWeapon != null) viewWeapon.localRotation = rotation;
+                yield return null;
+            }
+            if (worldWeapon != null) worldWeapon.localRotation = Quaternion.identity;
+            if (viewWeapon != null) viewWeapon.localRotation = Quaternion.identity;
+        }
+
+        private IEnumerator Swing()
+        {
+            swinging = true;
+            var start = Quaternion.Euler(-30f, 0f, -35f);
+            var end = Quaternion.Euler(65f, 0f, 20f);
+            for (var time = 0f; time < 0.16f; time += Time.deltaTime)
+            {
+                var rotation = Quaternion.Slerp(start, end, time / 0.16f);
+                if (worldWeapon != null) worldWeapon.localRotation = rotation;
+                if (viewWeapon != null) viewWeapon.localRotation = rotation;
+                yield return null;
+            }
+            for (var time = 0f; time < 0.18f; time += Time.deltaTime)
+            {
+                var rotation = Quaternion.Slerp(end, Quaternion.identity, time / 0.18f);
+                if (worldWeapon != null) worldWeapon.localRotation = rotation;
+                if (viewWeapon != null) viewWeapon.localRotation = rotation;
+                yield return null;
+            }
+            if (worldWeapon != null) worldWeapon.localRotation = Quaternion.identity;
+            if (viewWeapon != null) viewWeapon.localRotation = Quaternion.identity;
+            swinging = false;
         }
 
         private IEnumerator Reload()

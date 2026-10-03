@@ -6,8 +6,9 @@ namespace FogboundMaze
     {
         private Transform target;
         private Camera viewCamera;
+        private GameObject playerVisual;
         private float yaw;
-        private float pitch = 14f;
+        private float pitch = 4f;
         private bool firstPerson;
 
         public Camera Camera => viewCamera;
@@ -17,6 +18,7 @@ namespace FogboundMaze
         public void Initialize(Transform followTarget)
         {
             target = followTarget;
+            playerVisual = target.Find("Visual")?.gameObject;
             if (!TryGetComponent(out viewCamera))
             {
                 viewCamera = gameObject.AddComponent<Camera>();
@@ -34,18 +36,30 @@ namespace FogboundMaze
             var flashlight = flashlightObject.AddComponent<Light>();
             flashlight.type = LightType.Spot;
             flashlight.color = new Color(0.84f, 0.92f, 0.83f);
-            flashlight.range = 19f;
-            flashlight.spotAngle = 54f;
-            flashlight.innerSpotAngle = 31f;
-            flashlight.intensity = 1.35f;
+            flashlight.range = 21f;
+            flashlight.spotAngle = 62f;
+            flashlight.innerSpotAngle = 38f;
+            flashlight.intensity = 1.55f;
             flashlight.shadows = LightShadows.Soft;
             yaw = target.eulerAngles.y;
+            ResetView();
+        }
+
+        public void ResetView()
+        {
+            yaw = target.eulerAngles.y;
+            pitch = 4f;
+            firstPerson = false;
+            if (playerVisual != null) playerVisual.SetActive(true);
+            var rotation = Quaternion.Euler(pitch, yaw, 0f);
+            var focus = target.position + Vector3.up * 1.55f;
+            transform.SetPositionAndRotation(focus + rotation * new Vector3(0.55f, 0.15f, -3.2f), rotation);
         }
 
         public void TickLook(Vector2 look, bool toggle)
         {
             yaw += look.x;
-            pitch = Mathf.Clamp(pitch - look.y, -25f, 65f);
+            pitch = Mathf.Clamp(pitch - look.y, -45f, 60f);
             if (toggle)
             {
                 firstPerson = !firstPerson;
@@ -63,19 +77,24 @@ namespace FogboundMaze
             var focus = target.position + Vector3.up * 1.55f;
             if (firstPerson)
             {
-                transform.SetPositionAndRotation(focus + rotation * new Vector3(0.18f, 0f, 0.08f), rotation);
+                if (playerVisual != null && playerVisual.activeSelf) playerVisual.SetActive(false);
+                transform.SetPositionAndRotation(focus + rotation * new Vector3(0.18f, 0f, 0.5f), rotation);
                 return;
             }
 
-            var desiredDistance = 5.2f;
-            if (Physics.SphereCast(focus, 0.22f, rotation * Vector3.back, out var hit, desiredDistance,
-                    ~0, QueryTriggerInteraction.Ignore))
+            if (playerVisual != null && !playerVisual.activeSelf) playerVisual.SetActive(true);
+
+            var offset = rotation * new Vector3(0.55f, 0.15f, -3.2f);
+            var distance = offset.magnitude;
+            var desiredDistance = distance;
+            if (Physics.SphereCast(focus, 0.18f, offset / distance, out var hit, distance,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
             {
-                desiredDistance = Mathf.Max(0.65f, hit.distance - 0.18f);
+                desiredDistance = Mathf.Max(0.35f, hit.distance - 0.15f);
             }
 
-            var desired = focus + rotation * new Vector3(0.65f, 0.55f, -desiredDistance);
-            transform.position = Vector3.Lerp(transform.position, desired, 14f * Time.unscaledDeltaTime);
+            var desired = focus + offset.normalized * desiredDistance;
+            transform.position = Vector3.Lerp(transform.position, desired, Mathf.Clamp01(18f * Time.unscaledDeltaTime));
             transform.rotation = rotation;
         }
     }

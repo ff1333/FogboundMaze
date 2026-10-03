@@ -13,6 +13,8 @@ namespace FogboundMaze
         private Material floorMaterial;
         private Material wallMaterial;
         private Material trimMaterial;
+        private Material wallBaseMaterial;
+        private Material entryMaterial;
         private Transform generatedRoot;
 
         public MazeLayout Layout { get; private set; }
@@ -49,6 +51,7 @@ namespace FogboundMaze
             }
 
             CreateStagingArea();
+            CreateEntryMarkers();
             CreateExit();
             if (level.miasma)
             {
@@ -117,6 +120,8 @@ namespace FogboundMaze
             wall.isStatic = true;
             RuntimeArt.Primitive(PrimitiveType.Cube, "Wall Trim", wall.transform,
                 new Vector3(0f, 0.49f, 0f), new Vector3(1.02f, 0.04f, 1.02f), trimMaterial, false).isStatic = true;
+            RuntimeArt.Primitive(PrimitiveType.Cube, "Wall Base", wall.transform,
+                new Vector3(0f, -0.42f, 0f), new Vector3(1.02f, 0.055f, 1.02f), wallBaseMaterial, false).isStatic = true;
         }
 
         private void CreateStagingArea()
@@ -133,13 +138,65 @@ namespace FogboundMaze
                 start + Vector3.back * CellSize * 0.5f + Vector3.up * WallHeight * 0.5f,
                 new Vector3(CellSize, WallHeight, WallThickness * 1.4f), trimMaterial);
 
+            var frameColor = RuntimeArt.Material("Entry Frame", new Color(0.12f, 0.86f, 0.57f), 0.2f, 0.55f);
+            RuntimeArt.Primitive(PrimitiveType.Cube, "Entry Left", generatedRoot,
+                start + new Vector3(-CellSize * 0.45f, 1.65f, -CellSize * 0.5f),
+                new Vector3(0.18f, 3.3f, 0.18f), frameColor, false);
+            RuntimeArt.Primitive(PrimitiveType.Cube, "Entry Right", generatedRoot,
+                start + new Vector3(CellSize * 0.45f, 1.65f, -CellSize * 0.5f),
+                new Vector3(0.18f, 3.3f, 0.18f), frameColor, false);
+            RuntimeArt.Primitive(PrimitiveType.Cube, "Entry Header", generatedRoot,
+                start + new Vector3(0f, 3.25f, -CellSize * 0.5f),
+                new Vector3(CellSize * 0.94f, 0.18f, 0.18f), frameColor, false);
+            var entryLamp = new GameObject("Entry Light");
+            entryLamp.transform.SetParent(generatedRoot, false);
+            entryLamp.transform.position = start + new Vector3(0f, 2.7f, -CellSize * 0.5f);
+            var entryLight = entryLamp.AddComponent<Light>();
+            entryLight.type = LightType.Point;
+            entryLight.color = new Color(0.55f, 0.95f, 0.76f);
+            entryLight.range = 7f;
+            entryLight.intensity = 0.85f;
+
             var triggerObject = new GameObject("Entry Trigger");
             triggerObject.transform.SetParent(generatedRoot, false);
-            triggerObject.transform.position = start + Vector3.back * CellSize * 0.15f + Vector3.up;
+            triggerObject.transform.position = start + Vector3.up;
             var trigger = triggerObject.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
-            trigger.size = new Vector3(CellSize * 0.8f, 2f, 1f);
+            trigger.size = new Vector3(CellSize * 0.8f, 2f, CellSize * 0.8f);
+            var entryBody = triggerObject.AddComponent<Rigidbody>();
+            entryBody.isKinematic = true;
+            entryBody.useGravity = false;
             triggerObject.AddComponent<MazeEntryTrigger>();
+        }
+
+        private void CreateEntryMarkers()
+        {
+            entryMaterial ??= RuntimeArt.Material("Entry Direction", new Color(0.15f, 0.9f, 0.56f), 0.1f, 0.55f);
+            var start = CellToWorld(Layout.Start);
+            CreateFloorArrow(start + Vector3.back * CellSize * 0.5f, Vector3.forward);
+            var path = MazePathfinder.FindPath(Layout, Layout.Start, Layout.Goal);
+            if (path.Count > 1)
+            {
+                var next = CellToWorld(path[1]);
+                var direction = (next - start).normalized;
+                CreateFloorArrow(start + direction * 1.2f, direction);
+            }
+        }
+
+        private void CreateFloorArrow(Vector3 center, Vector3 direction)
+        {
+            var root = new GameObject("Entry Direction Arrow").transform;
+            root.SetParent(generatedRoot, false);
+            root.position = center + Vector3.up * 0.035f;
+            root.rotation = Quaternion.LookRotation(direction);
+            RuntimeArt.Primitive(PrimitiveType.Cube, "Shaft", root,
+                new Vector3(0f, 0f, -0.32f), new Vector3(0.12f, 0.025f, 0.8f), entryMaterial, false);
+            for (var side = -1; side <= 1; side += 2)
+            {
+                var wing = RuntimeArt.Primitive(PrimitiveType.Cube, "Arrow Head", root,
+                    new Vector3(side * 0.23f, 0f, 0.28f), new Vector3(0.12f, 0.025f, 0.56f), entryMaterial, false);
+                wing.transform.localRotation = Quaternion.Euler(0f, side * 45f, 0f);
+            }
         }
 
         private void CreateExit()
@@ -148,6 +205,16 @@ namespace FogboundMaze
             var outside = goal + Vector3.right * CellSize;
             RuntimeArt.Primitive(PrimitiveType.Cube, "Exit Ground", generatedRoot,
                 outside - Vector3.up * 0.15f, new Vector3(CellSize * 2f, 0.3f, CellSize * 2f), floorMaterial);
+            var exitFrame = RuntimeArt.Material("Exit Frame", new Color(0.24f, 0.88f, 0.68f), 0.2f, 0.6f);
+            RuntimeArt.Primitive(PrimitiveType.Cube, "Exit Left", generatedRoot,
+                goal + new Vector3(CellSize * 0.5f, 1.6f, -CellSize * 0.45f),
+                new Vector3(0.18f, 3.2f, 0.18f), exitFrame, false);
+            RuntimeArt.Primitive(PrimitiveType.Cube, "Exit Right", generatedRoot,
+                goal + new Vector3(CellSize * 0.5f, 1.6f, CellSize * 0.45f),
+                new Vector3(0.18f, 3.2f, 0.18f), exitFrame, false);
+            RuntimeArt.Primitive(PrimitiveType.Cube, "Exit Header", generatedRoot,
+                goal + new Vector3(CellSize * 0.5f, 3.16f, 0f),
+                new Vector3(0.18f, 0.18f, CellSize * 0.94f), exitFrame, false);
             var beacon = RuntimeArt.Primitive(PrimitiveType.Cylinder, "Exit Beacon", generatedRoot,
                 goal + Vector3.right * CellSize * 0.65f + Vector3.up * 1.7f,
                 new Vector3(0.55f, 1.7f, 0.55f), trimMaterial, false);
@@ -163,6 +230,9 @@ namespace FogboundMaze
             var trigger = triggerObject.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.size = new Vector3(2f, 2f, CellSize * 0.8f);
+            var exitBody = triggerObject.AddComponent<Rigidbody>();
+            exitBody.isKinematic = true;
+            exitBody.useGravity = false;
             triggerObject.AddComponent<MazeExitTrigger>();
         }
 
@@ -197,6 +267,7 @@ namespace FogboundMaze
             floorMaterial ??= RuntimeArt.MaterialFromResource("FogboundFloor", new Color(0.11f, 0.14f, 0.15f));
             wallMaterial ??= RuntimeArt.MaterialFromResource("FogboundWall", new Color(0.24f, 0.27f, 0.25f));
             trimMaterial ??= RuntimeArt.MaterialFromResource("FogboundHazard", new Color(0.72f, 0.52f, 0.18f));
+            wallBaseMaterial ??= RuntimeArt.Material("Wall Base", new Color(0.42f, 0.48f, 0.43f), 0f, 0.18f);
         }
 
         private void Clear()

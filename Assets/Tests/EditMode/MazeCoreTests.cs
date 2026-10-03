@@ -36,6 +36,25 @@ namespace FogboundMaze.Tests
         }
 
         [Test]
+        public void Exploration_RevealsOnlyVisitedCells()
+        {
+            var maze = MazeGenerator.Generate(7, 7, 1101);
+            var exploration = new MazeExploration(maze);
+            Assert.That(exploration.VisitedCount, Is.EqualTo(1));
+            Assert.That(exploration.IsVisited(maze.Start), Is.True);
+            Assert.That(exploration.IsGoalDiscovered, Is.False);
+            Assert.That(exploration.Reveal(new Vector2Int(-1, 0)), Is.False);
+            foreach (var next in maze.GetOpenNeighbors(maze.Start))
+            {
+                Assert.That(exploration.Reveal(next), Is.True);
+                Assert.That(exploration.Reveal(next), Is.False);
+                Assert.That(exploration.VisitedCount, Is.EqualTo(2));
+                return;
+            }
+            Assert.Fail("Generated maze start has no open neighbor.");
+        }
+
+        [Test]
         public void DefaultCampaign_ContainsValidatedProgression()
         {
             var levels = LevelCatalog.CreateDefault();

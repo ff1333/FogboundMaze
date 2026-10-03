@@ -20,6 +20,7 @@ namespace FogboundMaze
         private int kills;
         private int pendingSpawns;
         private int currentLevel;
+        private GamePhase phaseBeforePause;
         private System.Random random;
 
         public GamePhase Phase { get; private set; }
@@ -50,7 +51,17 @@ namespace FogboundMaze
 
         private void Update()
         {
-            if (input.PausePressed && Phase is GamePhase.Playing or GamePhase.Paused)
+            if (Phase == GamePhase.Staging)
+            {
+                if (player.Weapon.Type != WeaponType.None
+                    && player.transform.position.z >= world.EntryPosition.z - 1.25f
+                    && world.IsInside(player.transform.position))
+                    BeginRun();
+                Hud.Refresh(this, player);
+            }
+
+            if (input.PausePressed && (Phase is GamePhase.Playing or GamePhase.Paused
+                || (Phase == GamePhase.Staging && player.Weapon.Type != WeaponType.None)))
             {
                 SetPaused(Phase != GamePhase.Paused);
             }
@@ -76,12 +87,28 @@ namespace FogboundMaze
             Hud.Refresh(this, player);
         }
 
+        private void OnApplicationFocus(bool focused)
+        {
+            if (!focused)
+            {
+                SetCursorLocked(false);
+                return;
+            }
+            if (focused && player != null && player.Weapon != null
+                && player.Weapon.Type != WeaponType.None
+                && Phase is GamePhase.Staging or GamePhase.Playing)
+                SetCursorLocked(true);
+        }
+
         public void SelectWeapon(WeaponType type)
         {
             if (Phase != GamePhase.Staging) return;
             player.Weapon.Equip(type);
             world.OpenStartGate();
             Hud.HideWeaponSelection();
+            Hud.ShowEntryPrompt();
+            Hud.Refresh(this, player);
+            SetCursorLocked(true);
         }
 
         public void BeginRun()
@@ -90,6 +117,7 @@ namespace FogboundMaze
             Phase = GamePhase.Playing;
             nextSpawn = Time.time + 1.2f;
             Hud.SetPhase(Phase, currentLevel);
+            Hud.HideEntryPrompt();
         }
 
         public void CompleteLevel()
@@ -111,10 +139,23 @@ namespace FogboundMaze
 
         public void Retry() => LoadLevel(currentLevel);
         public void NextLevel() => LoadLevel(Mathf.Min(10, currentLevel + 1));
+        public void ReturnToLoadout() => LoadLevel(currentLevel);
+
+        public void QuitGame()
+        {
+            Time.timeScale = 1f;
+            SetCursorLocked(false);
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
 
         public void SetPaused(bool paused)
         {
-            Phase = paused ? GamePhase.Paused : GamePhase.Playing;
+            if (paused) phaseBeforePause = Phase;
+            Phase = paused ? GamePhase.Paused : phaseBeforePause;
             Time.timeScale = paused ? 0f : 1f;
             Hud.SetPause(paused);
             SetCursorLocked(!paused);
@@ -132,6 +173,7 @@ namespace FogboundMaze
             world.Build(level);
             player.transform.position = world.StartPosition + Vector3.up * 0.2f;
             player.transform.rotation = Quaternion.identity;
+            cameraRig.ResetView();
             player.Health.ResetHealth(100f);
             player.Weapon.Equip(WeaponType.None);
             environment.Apply(level);
@@ -141,6 +183,7 @@ namespace FogboundMaze
             PlayerPrefs.SetInt("Fogbound.SelectedLevel", currentLevel);
             PlayerPrefs.Save();
             Hud.ShowWeaponSelection(number);
+            Hud.ResetMap(world, player, cameraRig);
             SetCursorLocked(false);
         }
 
@@ -162,6 +205,7 @@ namespace FogboundMaze
         private PlayerController CreatePlayer()
         {
             var root = new GameObject("Player");
+            root.layer = LayerMask.NameToLayer("Ignore Raycast");
             var controller = root.AddComponent<CharacterController>();
             controller.height = 1.85f;
             controller.radius = 0.34f;
@@ -222,8 +266,9 @@ namespace FogboundMaze
 
         private static void SetCursorLocked(bool locked)
         {
-            Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
-            Cursor.visible = !locked;
+            var desktopLock = locked && !Application.isMobilePlatform;
+            Cursor.lockState = desktopLock ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !desktopLock;
         }
     }
 }

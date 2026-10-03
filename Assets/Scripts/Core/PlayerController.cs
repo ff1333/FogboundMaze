@@ -40,10 +40,7 @@ namespace FogboundMaze
             var rotation = Quaternion.Euler(0f, cameraRig.Yaw, 0f);
             var direction = rotation * new Vector3(input.Move.x, 0f, input.Move.y);
             var speed = input.SprintHeld ? 7.2f : 4.8f;
-            if (direction.sqrMagnitude > 0.02f)
-            {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 15f * Time.deltaTime);
-            }
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Mathf.Clamp01(15f * Time.deltaTime));
 
             if (controller.isGrounded && verticalSpeed < 0f) verticalSpeed = -2f;
             verticalSpeed += Physics.gravity.y * Time.deltaTime;

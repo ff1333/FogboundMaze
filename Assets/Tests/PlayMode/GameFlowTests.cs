@@ -19,6 +19,108 @@ namespace FogboundMaze.Tests
         }
 
         [UnityTest]
+        public IEnumerator PlayerCanWalkThroughOpenGateIntoMaze()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Pistol);
+            Assert.That(director.Phase, Is.EqualTo(GamePhase.Staging));
+            var controller = director.Player.GetComponent<CharacterController>();
+            for (var step = 0; step < 35 && director.Phase == GamePhase.Staging; step++)
+            {
+                controller.Move(Vector3.forward * 0.18f);
+                yield return null;
+            }
+            Assert.That(director.Phase, Is.EqualTo(GamePhase.Playing),
+                $"Player stopped at {director.Player.transform.position} before reaching the entry trigger.");
+            Assert.That(director.World.IsInside(director.Player.transform.position), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator ExplorationMap_TracksVisitedCellsAndResetsForNewRun()
+        {
+            var director = GameDirector.Instance;
+            Assert.That(director.Hud.ExploredCells, Is.EqualTo(1));
+            director.SelectWeapon(WeaponType.Pistol);
+            director.BeginRun();
+            foreach (var next in director.World.Layout.GetOpenNeighbors(director.World.Layout.Start))
+            {
+                director.Player.transform.position = director.World.CellToWorld(next) + Vector3.up * 0.2f;
+                Assert.That(director.World.IsInside(director.Player.transform.position), Is.True);
+                Assert.That(Object.FindFirstObjectByType<MiniMapHud>().isActiveAndEnabled, Is.True);
+                yield return null;
+                yield return null;
+                Assert.That(director.Hud.ExploredCells, Is.EqualTo(2),
+                    $"Player at {director.Player.transform.position}, next cell {next}.");
+                director.ReturnToLoadout();
+                Assert.That(director.Hud.ExploredCells, Is.EqualTo(1));
+                yield break;
+            }
+            Assert.Fail("Generated maze start has no open neighbor.");
+        }
+
+        [UnityTest]
+        public IEnumerator EscapePauseFromStaging_CanReturnToLoadout()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Pistol);
+            director.SetPaused(true);
+            Assert.That(director.Phase, Is.EqualTo(GamePhase.Paused));
+            Assert.That(Time.timeScale, Is.EqualTo(0f));
+            director.SetPaused(false);
+            Assert.That(director.Phase, Is.EqualTo(GamePhase.Staging));
+            director.ReturnToLoadout();
+            yield return null;
+            Assert.That(director.Player.Weapon.Type, Is.EqualTo(WeaponType.None));
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+        }
+
+        [UnityTest]
+        public IEnumerator MacheteSwing_DamagesEnemyInFront()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Machete);
+            director.BeginRun();
+            var enemyObject = new GameObject("Melee Test Enemy");
+            enemyObject.AddComponent<CharacterController>();
+            var health = enemyObject.AddComponent<Health>();
+            var enemy = enemyObject.AddComponent<EnemyAgent>();
+            enemy.Spawn(director.Player, director.World,
+                director.Player.transform.position + Vector3.forward * 1.5f, false);
+            Physics.SyncTransforms();
+
+            director.Player.Weapon.Tick(true, true, false);
+            Assert.That(director.Player.Weapon.IsSwinging, Is.True);
+            Assert.That(health.Current, Is.LessThan(health.Maximum));
+            Object.Destroy(enemyObject);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator PistolCrosshair_DamagesEnemyInSight()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Pistol);
+            director.BeginRun();
+            var enemyObject = new GameObject("Aim Test Enemy");
+            var controller = enemyObject.AddComponent<CharacterController>();
+            controller.height = 1.9f;
+            controller.center = Vector3.up * 0.95f;
+            var health = enemyObject.AddComponent<Health>();
+            var enemy = enemyObject.AddComponent<EnemyAgent>();
+            var position = director.CameraRig.Camera.transform.position
+                + director.CameraRig.Camera.transform.forward * 8f;
+            position.y = 0f;
+            enemy.Spawn(director.Player, director.World, position, false);
+            Physics.SyncTransforms();
+
+            director.Player.Weapon.Tick(true, true, false);
+            Assert.That(health.Current, Is.LessThan(health.Maximum));
+            Assert.That(director.Player.Weapon.Ammunition, Is.EqualTo(9));
+            Object.Destroy(enemyObject);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator PlayingRun_SpawnsEnemyAfterVisibleTelegraphDelay()
         {
             var director = GameDirector.Instance;

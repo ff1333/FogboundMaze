@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -9,13 +10,14 @@ namespace FogboundMaze
     public sealed class GameHud : MonoBehaviour
     {
         private static readonly Color Ink = new(0.92f, 0.95f, 0.91f);
-        private static readonly Color Panel = new(0.035f, 0.055f, 0.06f, 0.92f);
+        private static readonly Color Panel = new(0.035f, 0.055f, 0.06f, 0.97f);
         private static readonly Color Accent = new(0.2f, 0.78f, 0.62f);
         private static readonly Color Warning = new(0.95f, 0.55f, 0.18f);
 
         private GameInput input;
         private Font font;
         private Text healthText;
+        private Image healthFill;
         private Text levelText;
         private Text weaponText;
         private Text timerText;
@@ -23,11 +25,16 @@ namespace FogboundMaze
         private Text statusText;
         private Text resultTitle;
         private Text resultStats;
-        private Image crosshair;
+        private GameObject crosshair;
+        private readonly List<Image> crosshairParts = new();
+        private Text entryPrompt;
+        private MiniMapHud miniMap;
         private GameObject selectionPanel;
         private GameObject resultPanel;
         private GameObject pausePanel;
         private float crosshairFlash;
+
+        public int ExploredCells => miniMap?.VisitedCount ?? 0;
 
         public static GameHud Create(GameInput input)
         {
@@ -43,19 +50,25 @@ namespace FogboundMaze
             if (crosshairFlash > 0f)
             {
                 crosshairFlash -= Time.unscaledDeltaTime;
-                crosshair.color = crosshairFlash > 0f ? Warning : Ink;
+                foreach (var part in crosshairParts)
+                    part.color = crosshairFlash > 0f ? Accent : Ink;
             }
         }
 
         public void Refresh(GameDirector director, PlayerController player)
         {
             healthText.text = $"HP  {Mathf.CeilToInt(player.Health.Current)} / {Mathf.CeilToInt(player.Health.Maximum)}";
+            healthFill.fillAmount = player.Health.Maximum > 0f
+                ? Mathf.Clamp01(player.Health.Current / player.Health.Maximum) : 0f;
             levelText.text = $"LEVEL  {director.CurrentLevel.levelNumber:00}";
             timerText.text = TimeSpan.FromSeconds(director.Elapsed).ToString(@"mm\:ss");
             killsText.text = $"KILLS  {director.Kills:000}";
-            weaponText.text = player.Weapon.Type == WeaponType.Pistol
-                ? $"PISTOL  {(player.Weapon.IsReloading ? "RELOAD" : player.Weapon.Ammunition.ToString("00"))}"
-                : "MACHETE";
+            weaponText.text = player.Weapon.Type switch
+            {
+                WeaponType.Pistol => $"PISTOL  {(player.Weapon.IsReloading ? "RELOAD" : player.Weapon.Ammunition.ToString("00"))}",
+                WeaponType.Machete => "MACHETE",
+                _ => "UNARMED"
+            };
             statusText.text = director.CurrentLevel.miasma
                 ? (director.IsPlayerSafe ? "LIGHT SAFE" : "MIASMA EXPOSED")
                 : string.Empty;
@@ -65,12 +78,28 @@ namespace FogboundMaze
         public void ShowWeaponSelection(int level)
         {
             selectionPanel.SetActive(true);
+            miniMap.gameObject.SetActive(false);
+            crosshair.SetActive(false);
+            entryPrompt.gameObject.SetActive(false);
             resultPanel.SetActive(false);
             pausePanel.SetActive(false);
             levelText.text = $"LEVEL  {level:00}";
         }
 
-        public void HideWeaponSelection() => selectionPanel.SetActive(false);
+        public void HideWeaponSelection()
+        {
+            selectionPanel.SetActive(false);
+            miniMap.gameObject.SetActive(true);
+            crosshair.SetActive(true);
+        }
+
+        public void ResetMap(MazeWorld world, PlayerController player, CameraRig cameraRig)
+        {
+            miniMap.Configure(world, player.transform, cameraRig);
+        }
+
+        public void ShowEntryPrompt() => entryPrompt.gameObject.SetActive(true);
+        public void HideEntryPrompt() => entryPrompt.gameObject.SetActive(false);
 
         public void SetPhase(GamePhase phase, int level)
         {
@@ -80,6 +109,7 @@ namespace FogboundMaze
         public void ShowResult(bool won, int level, float elapsed, int kills)
         {
             resultPanel.SetActive(true);
+            crosshair.SetActive(false);
             resultTitle.text = won ? (level == 10 ? "CAMPAIGN CLEARED" : "EXIT REACHED") : "RUN LOST";
             resultTitle.color = won ? Accent : Warning;
             resultStats.text = $"LEVEL {level:00}    {TimeSpan.FromSeconds(elapsed):mm\\:ss}    KILLS {kills:000}";
@@ -87,7 +117,11 @@ namespace FogboundMaze
             if (next != null) next.SetActive(won && level < 10);
         }
 
-        public void SetPause(bool paused) => pausePanel.SetActive(paused);
+        public void SetPause(bool paused)
+        {
+            pausePanel.SetActive(paused);
+            crosshair.SetActive(!paused);
+        }
 
         public void FlashCrosshair()
         {
@@ -108,7 +142,9 @@ namespace FogboundMaze
             EnsureEventSystem();
 
             BuildTopBar();
+            miniMap = MiniMapHud.Create(transform, font);
             BuildCrosshair();
+            BuildEntryPrompt();
             BuildSelection();
             BuildResult();
             BuildPause();
@@ -123,53 +159,94 @@ namespace FogboundMaze
             var bar = PanelObject("Top Bar", transform, Panel);
             Stretch(bar.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(1f, 1f),
                 new Vector2(0f, -82f), Vector2.zero);
-            levelText = Label("Level", bar.transform, "LEVEL  01", 28, TextAnchor.MiddleLeft);
-            SetRect(levelText.rectTransform, new Vector2(0f, 0f), new Vector2(0.16f, 1f), new Vector2(28f, 0f), new Vector2(-8f, 0f));
-            healthText = Label("Health", bar.transform, "HP  100 / 100", 28, TextAnchor.MiddleLeft);
-            SetRect(healthText.rectTransform, new Vector2(0.16f, 0f), new Vector2(0.38f, 1f));
-            weaponText = Label("Weapon", bar.transform, "UNARMED", 28, TextAnchor.MiddleCenter);
-            SetRect(weaponText.rectTransform, new Vector2(0.38f, 0f), new Vector2(0.62f, 1f));
-            statusText = Label("Status", bar.transform, string.Empty, 24, TextAnchor.MiddleCenter);
-            SetRect(statusText.rectTransform, new Vector2(0.62f, 0f), new Vector2(0.79f, 1f));
-            killsText = Label("Kills", bar.transform, "KILLS  000", 25, TextAnchor.MiddleCenter);
-            SetRect(killsText.rectTransform, new Vector2(0.79f, 0f), new Vector2(0.91f, 1f));
-            timerText = Label("Timer", bar.transform, "00:00", 30, TextAnchor.MiddleRight);
-            SetRect(timerText.rectTransform, new Vector2(0.91f, 0f), Vector2.one, Vector2.zero, new Vector2(-28f, 0f));
+            healthText = Label("Health", bar.transform, "HP  100 / 100", 25, TextAnchor.MiddleLeft);
+            SetRect(healthText.rectTransform, new Vector2(0.02f, 0.44f), new Vector2(0.25f, 1f));
+            var healthTrack = PanelObject("Health Track", bar.transform, new Color(0.19f, 0.22f, 0.24f));
+            SetRect(healthTrack.GetComponent<RectTransform>(), new Vector2(0.02f, 0.18f), new Vector2(0.25f, 0.31f));
+            healthFill = PanelObject("Health Fill", healthTrack.transform, new Color(0.95f, 0.34f, 0.42f)).GetComponent<Image>();
+            SetRect(healthFill.rectTransform, Vector2.zero, Vector2.one);
+            healthFill.type = Image.Type.Filled;
+            healthFill.fillMethod = Image.FillMethod.Horizontal;
+            healthTrack.GetComponent<Image>().raycastTarget = false;
+            healthFill.raycastTarget = false;
+            timerText = Label("Timer", bar.transform, "00:00", 31, TextAnchor.MiddleCenter);
+            SetRect(timerText.rectTransform, new Vector2(0.43f, 0f), new Vector2(0.57f, 1f));
+            weaponText = Label("Weapon", bar.transform, "UNARMED", 25, TextAnchor.MiddleCenter);
+            SetRect(weaponText.rectTransform, new Vector2(0.59f, 0.42f), new Vector2(0.76f, 1f));
+            statusText = Label("Status", bar.transform, string.Empty, 19, TextAnchor.MiddleCenter);
+            SetRect(statusText.rectTransform, new Vector2(0.59f, 0f), new Vector2(0.76f, 0.48f));
+            levelText = Label("Level", bar.transform, "LEVEL  01", 23, TextAnchor.MiddleCenter, Accent);
+            SetRect(levelText.rectTransform, new Vector2(0.77f, 0f), new Vector2(0.84f, 1f));
+            killsText = Label("Kills", bar.transform, "KILLS  000", 23, TextAnchor.MiddleCenter);
+            SetRect(killsText.rectTransform, new Vector2(0.85f, 0f), new Vector2(0.97f, 1f));
         }
 
         private void BuildCrosshair()
         {
-            var root = new GameObject("Crosshair", typeof(RectTransform), typeof(Image));
+            var root = new GameObject("Crosshair", typeof(RectTransform));
             root.transform.SetParent(transform, false);
-            crosshair = root.GetComponent<Image>();
-            crosshair.color = Ink;
+            crosshair = root;
             var rect = root.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(5f, 5f);
+            rect.sizeDelta = new Vector2(52f, 52f);
+            CrosshairPart(root.transform, "Center", Vector2.zero, new Vector2(5f, 5f));
+            CrosshairPart(root.transform, "Top", new Vector2(0f, 15f), new Vector2(3f, 11f));
+            CrosshairPart(root.transform, "Bottom", new Vector2(0f, -15f), new Vector2(3f, 11f));
+            CrosshairPart(root.transform, "Left", new Vector2(-15f, 0f), new Vector2(11f, 3f));
+            CrosshairPart(root.transform, "Right", new Vector2(15f, 0f), new Vector2(11f, 3f));
+            crosshair.SetActive(false);
+        }
+
+        private void CrosshairPart(Transform parent, string name, Vector2 position, Vector2 size)
+        {
+            var part = new GameObject(name, typeof(RectTransform), typeof(Image));
+            part.transform.SetParent(parent, false);
+            var rect = part.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = Vector2.one * 0.5f;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            var image = part.GetComponent<Image>();
+            image.color = Ink;
+            image.raycastTarget = false;
+            crosshairParts.Add(image);
+        }
+
+        private void BuildEntryPrompt()
+        {
+            entryPrompt = Label("Entry Prompt", transform, "ENTER THROUGH THE GREEN GATE", 27, TextAnchor.MiddleCenter, Accent);
+            SetRect(entryPrompt.rectTransform, new Vector2(0.26f, 0.77f), new Vector2(0.74f, 0.83f));
+            entryPrompt.gameObject.SetActive(false);
         }
 
         private void BuildSelection()
         {
             selectionPanel = PanelObject("Weapon Selection", transform, Panel);
+            AddFrame(selectionPanel);
             var rect = selectionPanel.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(760f, 410f);
+            rect.sizeDelta = new Vector2(820f, 480f);
             var title = Label("Title", selectionPanel.transform, "CHOOSE YOUR LOADOUT", 42, TextAnchor.MiddleCenter);
             SetRect(title.rectTransform, new Vector2(0f, 0.72f), Vector2.one);
             var subtitle = Label("Subtitle", selectionPanel.transform, "ONE WEAPON. ONE EXIT.", 20, TextAnchor.MiddleCenter, new Color(0.62f, 0.7f, 0.69f));
             SetRect(subtitle.rectTransform, new Vector2(0f, 0.61f), new Vector2(1f, 0.76f));
             var pistol = Button("Pistol", selectionPanel.transform, "PISTOL\n10 rounds  |  28m", new Color(0.12f, 0.42f, 0.55f));
-            SetRect(pistol.GetComponent<RectTransform>(), new Vector2(0.08f, 0.12f), new Vector2(0.48f, 0.55f));
+            SetRect(pistol.GetComponent<RectTransform>(), new Vector2(0.08f, 0.23f), new Vector2(0.48f, 0.58f));
             pistol.onClick.AddListener(() => GameDirector.Instance.SelectWeapon(WeaponType.Pistol));
             var machete = Button("Machete", selectionPanel.transform, "MACHETE\nhigh damage  |  close", new Color(0.55f, 0.25f, 0.12f));
-            SetRect(machete.GetComponent<RectTransform>(), new Vector2(0.52f, 0.12f), new Vector2(0.92f, 0.55f));
+            SetRect(machete.GetComponent<RectTransform>(), new Vector2(0.52f, 0.23f), new Vector2(0.92f, 0.58f));
             machete.onClick.AddListener(() => GameDirector.Instance.SelectWeapon(WeaponType.Machete));
+            var controls = Application.isMobilePlatform
+                ? "LEFT STICK MOVE  |  SWIPE LOOK  |  FIRE ATTACK\nRUN SPRINT  |  R RELOAD  |  VIEW CAMERA"
+                : "WASD MOVE  |  MOUSE AIM  |  LEFT CLICK ATTACK\nSHIFT SPRINT  |  R RELOAD  |  V CAMERA  |  ESC RELEASE MOUSE";
+            var help = Label("Controls", selectionPanel.transform, controls, 22, TextAnchor.MiddleCenter);
+            SetRect(help.rectTransform, new Vector2(0.04f, 0.025f), new Vector2(0.96f, 0.2f));
         }
 
         private void BuildResult()
         {
             resultPanel = PanelObject("Result", transform, Panel);
+            AddFrame(resultPanel);
             var rect = resultPanel.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(650f, 340f);
@@ -189,14 +266,24 @@ namespace FogboundMaze
         private void BuildPause()
         {
             pausePanel = PanelObject("Pause", transform, Panel);
+            AddFrame(pausePanel);
             var rect = pausePanel.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(480f, 260f);
+            rect.sizeDelta = new Vector2(500f, 360f);
             var title = Label("Title", pausePanel.transform, "PAUSED", 46, TextAnchor.MiddleCenter);
-            SetRect(title.rectTransform, new Vector2(0f, 0.54f), Vector2.one);
+            SetRect(title.rectTransform, new Vector2(0f, 0.72f), Vector2.one);
             var resume = Button("Resume", pausePanel.transform, "RESUME", Accent);
-            SetRect(resume.GetComponent<RectTransform>(), new Vector2(0.16f, 0.14f), new Vector2(0.84f, 0.43f));
+            SetRect(resume.GetComponent<RectTransform>(), new Vector2(0.14f, 0.53f), new Vector2(0.86f, 0.7f));
             resume.onClick.AddListener(() => GameDirector.Instance.SetPaused(false));
+            var loadout = Button("Loadout", pausePanel.transform, "BACK TO LOADOUT", new Color(0.22f, 0.34f, 0.34f));
+            SetRect(loadout.GetComponent<RectTransform>(), new Vector2(0.14f, 0.31f), new Vector2(0.86f, 0.48f));
+            loadout.onClick.AddListener(() => GameDirector.Instance.ReturnToLoadout());
+            if (Application.platform != RuntimePlatform.WebGLPlayer)
+            {
+                var quit = Button("Quit", pausePanel.transform, "QUIT GAME", new Color(0.38f, 0.2f, 0.18f));
+                SetRect(quit.GetComponent<RectTransform>(), new Vector2(0.14f, 0.09f), new Vector2(0.86f, 0.26f));
+                quit.onClick.AddListener(() => GameDirector.Instance.QuitGame());
+            }
             pausePanel.SetActive(false);
         }
 
@@ -235,6 +322,13 @@ namespace FogboundMaze
             root.transform.SetParent(parent, false);
             root.GetComponent<Image>().color = color;
             return root;
+        }
+
+        private static void AddFrame(GameObject panel)
+        {
+            var outline = panel.AddComponent<Outline>();
+            outline.effectColor = Accent;
+            outline.effectDistance = new Vector2(2f, 2f);
         }
 
         private static void EnsureEventSystem()

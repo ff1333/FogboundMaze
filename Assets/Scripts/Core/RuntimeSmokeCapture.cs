@@ -11,13 +11,38 @@ namespace FogboundMaze
             var arguments = System.Environment.GetCommandLineArgs();
             var output = ReadArgument(arguments, "-fogboundScreenshot");
             var gameplay = System.Array.Exists(arguments, value => value == "-fogboundGameplay");
+            var firstPerson = System.Array.Exists(arguments, value => value == "-fogboundFirstPerson");
+            var machete = System.Array.Exists(arguments, value => value == "-fogboundMachete");
+            var pause = System.Array.Exists(arguments, value => value == "-fogboundPause");
+            var mapTrail = System.Array.Exists(arguments, value => value == "-fogboundMapTrail");
             yield return new WaitForSecondsRealtime(1f);
 
-            if (gameplay)
+            if (pause)
             {
-                GameDirector.Instance.SelectWeapon(WeaponType.Pistol);
-                GameDirector.Instance.BeginRun();
-                GameDirector.Instance.Player.transform.position = GameDirector.Instance.World.EntryPosition + Vector3.up * 0.2f;
+                var director = GameDirector.Instance;
+                director.SelectWeapon(WeaponType.Pistol);
+                director.SetPaused(true);
+                yield return new WaitForSecondsRealtime(0.5f);
+            }
+            else if (gameplay)
+            {
+                var director = GameDirector.Instance;
+                director.SelectWeapon(machete ? WeaponType.Machete : WeaponType.Pistol);
+                director.Player.GetComponent<CharacterController>().Move(Vector3.forward * 3.5f);
+                yield return null;
+                if (firstPerson)
+                    director.CameraRig.TickLook(Vector2.zero, true);
+                if (mapTrail)
+                {
+                    var path = MazePathfinder.FindPath(director.World.Layout,
+                        director.World.Layout.Start, director.World.Layout.Goal);
+                    for (var i = 0; i < Mathf.Min(5, path.Count); i++)
+                    {
+                        director.Player.transform.position = director.World.CellToWorld(path[i]) + Vector3.up * 0.2f;
+                        yield return null;
+                        yield return null;
+                    }
+                }
                 yield return new WaitForSecondsRealtime(2.5f);
             }
 
@@ -28,7 +53,7 @@ namespace FogboundMaze
                 yield return new WaitForSecondsRealtime(1f);
             }
 
-            Debug.Log($"FOGBOUND_RUNTIME_SMOKE_PASS mode={(gameplay ? "gameplay" : "staging")} screenshot={output}");
+            Debug.Log($"FOGBOUND_RUNTIME_SMOKE_PASS mode={(pause ? "pause" : gameplay ? "gameplay" : "staging")} screenshot={output}");
             Application.Quit(0);
         }
 
