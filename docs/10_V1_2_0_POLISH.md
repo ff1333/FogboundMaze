@@ -24,7 +24,9 @@
 
 正式构建附件目录：`Builds/Packages/v1.2.0/`。Windows 完整解压运行 exe；Android 安装 APK；WebGL 通过 HTTP 托管。
 自动测试：EditMode 10/10、PlayMode 23/23；Windows 实际 Player 截图与操作烟测见 `test-results/v1.2.0/`。
-三平台构建和浏览器状态以该目录的报告为准；新版 Android 真机仍需由持有手机的你确认，不沿用旧版结论。
+Windows/WebGL 构建为 0 errors / 0 warnings；Android 成功，0 errors / 5 warnings，告警来自 SDK 仓库网络检查。
+本机 Edge/Chromium 浏览器已经操作过开始、图鉴、选关、武器、移动和暂停，并检查截图，未捕获脚本异常。
+新版 Android 真机仍需由持有手机的你确认，不沿用旧版结论。
 
 ## 学习与发布
 
