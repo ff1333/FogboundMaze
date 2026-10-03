@@ -8,6 +8,114 @@ namespace FogboundMaze.Tests
 {
     public sealed class GameFlowTests
     {
+        [UnityTest]
+        public IEnumerator PhysicalMazeRoutes_AreWalkableInAllTenLevels()
+        {
+            var director = GameDirector.Instance;
+            director.enabled = false;
+            director.Player.enabled = false;
+            var controller = director.Player.GetComponent<CharacterController>();
+            foreach (var level in LevelCatalog.CreateDefault())
+            {
+                director.World.Build(level);
+                director.World.OpenStartGate();
+                // Primitive decorations remove their colliders with deferred Destroy.
+                yield return null;
+                PlaceController(controller, director.World.StartPosition);
+                Physics.SyncTransforms();
+                var path = MazePathfinder.FindPath(director.World.Layout,
+                    director.World.Layout.Start, director.World.Layout.Goal);
+                foreach (var cell in path)
+                    WalkTo(controller, director.World.CellToWorld(cell), $"Level {level.levelNumber}, cell {cell}");
+                WalkTo(controller, director.World.ExitPosition, $"Level {level.levelNumber}, exit");
+
+                // Check every open corridor, including branches outside the solution route.
+                for (var x = 0; x < director.World.Layout.Width; x++)
+                for (var y = 0; y < director.World.Layout.Height; y++)
+                {
+                    var cell = new Vector2Int(x, y);
+                    foreach (var neighbor in director.World.Layout.GetOpenNeighbors(cell))
+                    {
+                        PlaceController(controller, director.World.CellToWorld(cell));
+                        WalkTo(controller, director.World.CellToWorld(neighbor),
+                            $"Level {level.levelNumber}, corridor {cell} -> {neighbor}");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void StagingAndExitRooms_HaveSolidPerimeters()
+        {
+            var director = GameDirector.Instance;
+            director.Player.enabled = false;
+            director.World.OpenStartGate();
+            var controller = director.Player.GetComponent<CharacterController>();
+            Physics.SyncTransforms();
+            foreach (var side in new[] { Vector3.left, Vector3.right, Vector3.back })
+            {
+                PlaceController(controller, Vector3.back * MazeWorld.CellSize);
+                for (var i = 0; i < 80; i++) controller.Move(side * 0.2f + Vector3.down * 0.03f);
+                Assert.That(Mathf.Abs(controller.transform.position.x), Is.LessThan(2.5f), "Staging side escape");
+                Assert.That(controller.transform.position.z, Is.GreaterThan(-7.5f), "Staging rear escape");
+                Assert.That(controller.transform.position.y, Is.GreaterThan(-0.2f), "Staging fall");
+                // Reproduce walking beside the gate toward the former dark, unguarded edge.
+                for (var i = 0; i < 80; i++) controller.Move(Vector3.forward * 0.2f + Vector3.down * 0.03f);
+                Assert.That(controller.transform.position.y, Is.GreaterThan(-0.2f), "Fall beside entry");
+            }
+            foreach (var side in new[] { Vector3.forward, Vector3.back, Vector3.right })
+            {
+                PlaceController(controller, director.World.ExitPosition);
+                for (var i = 0; i < 80; i++) controller.Move(side * 0.2f + Vector3.down * 0.03f);
+                var delta = controller.transform.position - director.World.ExitPosition;
+                Assert.That(Mathf.Abs(delta.z), Is.LessThan(2.5f), "Exit side escape");
+                Assert.That(delta.x, Is.LessThan(2.5f), "Exit rear escape");
+                Assert.That(controller.transform.position.y, Is.GreaterThan(-0.2f), "Exit fall");
+            }
+        }
+
+        private static void PlaceController(CharacterController controller, Vector3 ground)
+        {
+            controller.enabled = false;
+            controller.transform.position = ground + Vector3.up * 0.1f;
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        [UnityTest]
+        public IEnumerator UnexpectedFall_RecoversAndRetryResetsGravity()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Pistol);
+            yield return new WaitForSeconds(0.4f);
+            var controller = director.Player.GetComponent<CharacterController>();
+            var grounded = director.Player.transform.position;
+            PlaceController(controller, new Vector3(-20f, -10f, -20f));
+            yield return null;
+            yield return null;
+            Assert.That(Vector3.Distance(director.Player.transform.position, grounded), Is.LessThan(0.3f));
+            director.Retry();
+            yield return new WaitForSeconds(0.4f);
+            Assert.That(director.Player.transform.position.y, Is.GreaterThan(-0.2f));
+            Assert.That(director.Phase, Is.EqualTo(GamePhase.Staging));
+        }
+
+        private static void WalkTo(CharacterController controller, Vector3 destination, string context)
+        {
+            for (var i = 0; i < 60; i++)
+            {
+                var delta = destination - controller.transform.position;
+                delta.y = 0f;
+                if (delta.magnitude < 0.08f) break;
+                controller.Move(Vector3.ClampMagnitude(delta, 0.2f) + Vector3.down * 0.03f);
+                Assert.That(controller.transform.position.y, Is.GreaterThan(-0.2f), context + " fell below floor");
+            }
+            var remaining = destination - controller.transform.position;
+            remaining.y = 0f;
+            Assert.That(remaining.magnitude, Is.LessThan(0.08f),
+                context + $" blocked at {controller.transform.position}");
+        }
+
         [UnitySetUp]
         public IEnumerator LoadMainScene()
         {

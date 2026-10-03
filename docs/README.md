@@ -1,5 +1,8 @@
 # Fogbound Maze 文档入口
 
+当前入口堵路、边缘掉落修复与复测步骤：先看 `07_V1_0_2_ENTRY_FIX.md`。
+v1.0.1 的测试漏查了实体通路，原因与新增证据见 `devlogs/05-entry-geometry-regression.md`。
+
 建议按下面顺序阅读：
 
 1. `00_GAME_DESIGN.md`：玩法目标、十关范围和难度解锁。

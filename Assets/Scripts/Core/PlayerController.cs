@@ -9,6 +9,7 @@ namespace FogboundMaze
         private GameInput input;
         private CameraRig cameraRig;
         private float verticalSpeed;
+        private Vector3 lastGroundedPosition;
 
         public Health Health { get; private set; }
         public WeaponController Weapon { get; private set; }
@@ -24,6 +25,15 @@ namespace FogboundMaze
             Weapon.Initialize(this, rig.Camera);
         }
 
+        public void Teleport(Vector3 position)
+        {
+            controller.enabled = false;
+            transform.position = position;
+            controller.enabled = true;
+            verticalSpeed = 0f;
+            lastGroundedPosition = position;
+        }
+
         private void Update()
         {
             if (input == null || GameDirector.Instance == null)
@@ -37,6 +47,10 @@ namespace FogboundMaze
                 return;
             }
 
+            // Recovery is a fallback for an unexpected physics escape, not a substitute for walls.
+            if (transform.position.y < -5f)
+                Teleport(lastGroundedPosition + Vector3.up * 0.1f);
+
             var rotation = Quaternion.Euler(0f, cameraRig.Yaw, 0f);
             var direction = rotation * new Vector3(input.Move.x, 0f, input.Move.y);
             var speed = input.SprintHeld ? 7.2f : 4.8f;
@@ -45,6 +59,10 @@ namespace FogboundMaze
             if (controller.isGrounded && verticalSpeed < 0f) verticalSpeed = -2f;
             verticalSpeed += Physics.gravity.y * Time.deltaTime;
             controller.Move((direction * speed + Vector3.up * verticalSpeed) * Time.deltaTime);
+            if (controller.isGrounded && Physics.Raycast(transform.position + Vector3.up * 0.2f,
+                Vector3.down, out var ground, 0.5f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                && ground.normal.y > 0.9f)
+                lastGroundedPosition = transform.position;
 
             Weapon.Tick(input.AttackHeld, input.AttackPressed, input.ReloadPressed);
         }

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="2" result="Failed(Child)" total="2" passed="0" failed="2" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-03 05:36:22Z" end-time="2026-10-03 05:36:23Z" duration="0.3064614">
+  <test-suite type="TestSuite" id="1019" name="Fogbound Maze" fullname="Fogbound Maze" runstate="Runnable" testcasecount="12" result="Failed" site="Child" start-time="2026-10-03 05:36:22Z" end-time="2026-10-03 05:36:23Z" duration="0.306461" total="2" passed="0" failed="2" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1014" name="FogboundMaze.PlayModeTests.dll" fullname="D:/software/documents/unity_games/projects/learning/FogboundMazeValidation/Library/ScriptAssemblies/FogboundMaze.PlayModeTests.dll" runstate="Runnable" testcasecount="12" result="Failed" site="Child" start-time="2026-10-03 05:36:22Z" end-time="2026-10-03 05:36:23Z" duration="0.301203" total="2" passed="0" failed="2" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="12236" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1015" name="FogboundMaze" fullname="FogboundMaze" runstate="Runnable" testcasecount="12" result="Failed" site="Child" start-time="2026-10-03 05:36:22Z" end-time="2026-10-03 05:36:23Z" duration="0.300779" total="2" passed="0" failed="2" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1016" name="Tests" fullname="FogboundMaze.Tests" runstate="Runnable" testcasecount="12" result="Failed" site="Child" start-time="2026-10-03 05:36:22Z" end-time="2026-10-03 05:36:23Z" duration="0.299113" total="2" passed="0" failed="2" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestFixture" id="1001" name="GameFlowTests" fullname="FogboundMaze.Tests.GameFlowTests" classname="FogboundMaze.Tests.GameFlowTests" runstate="Runnable" testcasecount="12" result="Failed" site="Child" start-time="2026-10-03 05:36:22Z" end-time="2026-10-03 05:36:23Z" duration="0.298185" total="2" passed="0" failed="2" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-case id="1002" name="PhysicalMazeRoutes_AreWalkableInAllTenLevels" fullname="FogboundMaze.Tests.GameFlowTests.PhysicalMazeRoutes_AreWalkableInAllTenLevels" methodname="PhysicalMazeRoutes_AreWalkableInAllTenLevels" classname="FogboundMaze.Tests.GameFlowTests" runstate="Runnable" seed="1998300982" result="Failed" start-time="2026-10-03 05:36:22Z" end-time="2026-10-03 05:36:23Z" duration="0.260406" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[  Level 1, cell (1, 1) blocked at (4.44, 0.08, 5.00)
+  Expected: less than 0.0799999982f
+  But was:  0.559999943f
+]]></message>
+                <stack-trace><![CDATA[at FogboundMaze.Tests.GameFlowTests.WalkTo (UnityEngine.CharacterController controller, UnityEngine.Vector3 destination, System.String context) [0x000b7] in D:\software\documents\unity_games\projects\learning\FogboundMazeValidation\Assets\Tests\PlayMode\GameFlowTests.cs:91
+at FogboundMaze.Tests.GameFlowTests.PhysicalMazeRoutes_AreWalkableInAllTenLevels () [0x000a4] in D:\software\documents\unity_games\projects\learning\FogboundMazeValidation\Assets\Tests\PlayMode\GameFlowTests.cs:26
+]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1003" name="StagingAndExitRooms_HaveSolidPerimeters" fullname="FogboundMaze.Tests.GameFlowTests.StagingAndExitRooms_HaveSolidPerimeters" methodname="StagingAndExitRooms_HaveSolidPerimeters" classname="FogboundMaze.Tests.GameFlowTests" runstate="Runnable" seed="514444426" result="Failed" start-time="2026-10-03 05:36:23Z" end-time="2026-10-03 05:36:23Z" duration="0.028465" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[  Staging side escape
+  Expected: less than 2.5f
+  But was:  4.44000006f
+]]></message>
+                <stack-trace><![CDATA[at FogboundMaze.Tests.GameFlowTests.StagingAndExitRooms_HaveSolidPerimeters () [0x000b6] in D:\software\documents\unity_games\projects\learning\FogboundMazeValidation\Assets\Tests\PlayMode\GameFlowTests.cs:56
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[Saving results to: D:\software\documents\unity_games\projects\learning\FogboundMazeValidation\Builds\entry-before.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

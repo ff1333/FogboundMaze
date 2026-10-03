@@ -72,9 +72,9 @@ namespace FogboundMaze
 
         public bool IsInside(Vector3 world)
         {
-            var cell = WorldToCell(world);
-            var center = CellToWorld(cell);
-            return Layout.Contains(cell) && Mathf.Abs(world.x - center.x) <= CellSize * 0.6f && Mathf.Abs(world.z - center.z) <= CellSize * 0.6f;
+            return world.x >= -CellSize * 0.5f && world.z >= -CellSize * 0.5f
+                && world.x <= (Layout.Width - 0.5f) * CellSize
+                && world.z <= (Layout.Height - 0.5f) * CellSize;
         }
 
         public bool IsWithinSafeLight(Vector3 position, float radius)
@@ -127,13 +127,15 @@ namespace FogboundMaze
         private void CreateStagingArea()
         {
             var start = CellToWorld(Layout.Start);
+            // One enclosed cell outside the south opening; walls must not extend into the maze.
+            var center = start + Vector3.back * CellSize;
             var stage = RuntimeArt.Primitive(PrimitiveType.Cube, "Staging Ground", generatedRoot,
-                start + Vector3.back * CellSize - Vector3.up * 0.15f,
-                new Vector3(CellSize * 2f, 0.3f, CellSize * 2f), floorMaterial);
+                center - Vector3.up * 0.15f,
+                new Vector3(CellSize, 0.3f, CellSize), floorMaterial);
             stage.isStatic = true;
-            CreateWall(start + Vector3.back * CellSize * 2f, new Vector3(CellSize * 2f, WallHeight, WallThickness));
-            CreateWall(start + Vector3.left * CellSize, new Vector3(WallThickness, WallHeight, CellSize * 4f));
-            CreateWall(start + Vector3.right * CellSize, new Vector3(WallThickness, WallHeight, CellSize * 4f));
+            CreateWall(center + Vector3.back * CellSize * 0.5f, new Vector3(CellSize, WallHeight, WallThickness));
+            CreateWall(center + Vector3.left * CellSize * 0.5f, new Vector3(WallThickness, WallHeight, CellSize));
+            CreateWall(center + Vector3.right * CellSize * 0.5f, new Vector3(WallThickness, WallHeight, CellSize));
             StartGate = RuntimeArt.Primitive(PrimitiveType.Cube, "Start Gate", generatedRoot,
                 start + Vector3.back * CellSize * 0.5f + Vector3.up * WallHeight * 0.5f,
                 new Vector3(CellSize, WallHeight, WallThickness * 1.4f), trimMaterial);
@@ -204,7 +206,10 @@ namespace FogboundMaze
             var goal = CellToWorld(Layout.Goal);
             var outside = goal + Vector3.right * CellSize;
             RuntimeArt.Primitive(PrimitiveType.Cube, "Exit Ground", generatedRoot,
-                outside - Vector3.up * 0.15f, new Vector3(CellSize * 2f, 0.3f, CellSize * 2f), floorMaterial);
+                outside - Vector3.up * 0.15f, new Vector3(CellSize, 0.3f, CellSize), floorMaterial);
+            CreateWall(outside + Vector3.right * CellSize * 0.5f, new Vector3(WallThickness, WallHeight, CellSize));
+            CreateWall(outside + Vector3.forward * CellSize * 0.5f, new Vector3(CellSize, WallHeight, WallThickness));
+            CreateWall(outside + Vector3.back * CellSize * 0.5f, new Vector3(CellSize, WallHeight, WallThickness));
             var exitFrame = RuntimeArt.Material("Exit Frame", new Color(0.24f, 0.88f, 0.68f), 0.2f, 0.6f);
             RuntimeArt.Primitive(PrimitiveType.Cube, "Exit Left", generatedRoot,
                 goal + new Vector3(CellSize * 0.5f, 1.6f, -CellSize * 0.45f),

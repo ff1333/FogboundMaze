@@ -171,7 +171,7 @@ namespace FogboundMaze
             pool.Prewarm(level.maxEnemies);
             pendingSpawns = 0;
             world.Build(level);
-            player.transform.position = world.StartPosition + Vector3.up * 0.2f;
+            player.Teleport(world.StartPosition + Vector3.up * 0.2f);
             player.transform.rotation = Quaternion.identity;
             cameraRig.ResetView();
             player.Health.ResetHealth(100f);

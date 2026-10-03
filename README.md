@@ -36,12 +36,14 @@ under `docs/`.
 
 ## Release Status
 
-- Local version: `v1.0.1` first-playtest fix (`v1.0.0` remains the original release)
+- Local version: `v1.0.2` entrance geometry fix; `v1.0.1` has confirmed blocked corridors and unguarded edges
 - EditMode tests: `9/9 PASS`
-- PlayMode tests: `10/10 PASS`
-- Windows, WebGL and Android release builds: `0 errors`, `0 warnings`
-- Windows Release Player smoke: `PASS`; WebGL browser interaction and Android device acceptance: `PENDING`
-- Release attachments: `Builds/Packages/v1.0.1/` (ignored by Git; upload them to GitHub Release)
+- PlayMode tests: `13/13 PASS`, including physical routes and every open corridor in all ten levels
+- Windows Release Player: continuous six-cell walks in first-person/pistol and third-person/machete `PASS`
+- Windows/WebGL builds: `0 errors / 0 warnings`; Android: `0 errors / 5 SDK remote-manifest warnings`
+- All three packages generated and SHA-256 verified; WebGL interaction and Android device acceptance remain `PENDING`
+- Release attachment directory: `Builds/Packages/v1.0.2/` (ignored by Git)
 - Start here: [`docs/README.md`](docs/README.md)
 - Playtest bug-fix log: [`docs/devlogs/04-first-playtest-bugfix.md`](docs/devlogs/04-first-playtest-bugfix.md)
-- Patch release checklist: [`docs/06_V1_0_1_PATCH_RELEASE.md`](docs/06_V1_0_1_PATCH_RELEASE.md)
+- Current regression log: [`docs/devlogs/05-entry-geometry-regression.md`](docs/devlogs/05-entry-geometry-regression.md)
+- Current retest and release steps: [`docs/07_V1_0_2_ENTRY_FIX.md`](docs/07_V1_0_2_ENTRY_FIX.md)

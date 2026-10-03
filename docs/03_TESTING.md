@@ -1,5 +1,8 @@
 # 测试说明
 
+当前 v1.0.2：EditMode 9/9、PlayMode 13/13 PASS。新增十关实体主路线与全部开放岔路、出生区/出口围挡、异常掉落恢复测试。详见 `devlogs/05-entry-geometry-regression.md`。
+下文 v1.0.1 的 10/10 结果是历史记录，未覆盖其后用户发现的实体墙体堵路问题。
+
 ## EditMode
 
 `MazeCoreTests` 验证：
