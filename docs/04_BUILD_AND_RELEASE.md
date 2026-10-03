@@ -1,5 +1,9 @@
 # 构建与发布指南
 
+> 这是 `v1.0.0` 发布时的历史记录。当前 `tools/build-release.ps1` 和
+> `tools/package-release.ps1` 已切换到 `v1.0.1`，不能再用下述命令重新生成
+> `v1.0.0` 包。最新补丁步骤请看 `06_V1_0_1_PATCH_RELEASE.md`。
+
 本文以 `v1.0.0` 为准。项目使用 Unity `6000.3.18f1`，本机 Unity 路径为：
 
 ```text
@@ -131,4 +135,3 @@ git remote -v
 GitHub Release 里的 WebGL ZIP 是交付包，不会在页面内自动运行。作品集需要在线试玩时，
 可以把 `FogboundMaze-WebGL-v1.0.0.zip` 上传到 itch.io，并勾选“该文件将在浏览器中运行”。
 发布后实际打开公开页面再做一次键鼠和加载测试，然后把试玩链接放进 README 和简历。
-

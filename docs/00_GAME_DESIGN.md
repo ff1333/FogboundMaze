@@ -24,7 +24,11 @@ and survive long enough to find the exit.
 | Reload | R | Reload button |
 | Sprint | Left Shift | Sprint button |
 | Camera | V | Camera button |
-| Pause | Escape | Pause button |
+| Pause / release mouse | Escape | Pause button |
+
+The exploration map starts with only the entrance known. Traversed cells stay
+marked so players can retrace their route, while undiscovered passages and the
+exit remain hidden until reached. This eases navigation without solving the maze.
 
 ## Difficulty Curve
 

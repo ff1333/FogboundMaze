@@ -13,7 +13,8 @@ function Invoke-UnityBuild([string]$method, [string]$logName, [string]$successPa
         "-executeMethod", $method,
         "-quit",
         "-logFile", $log
-    ) -Wait -PassThru -WindowStyle Hidden
+    ) -PassThru -WindowStyle Hidden
+    $process.WaitForExit()
 
     if ($process.ExitCode -ne 0) {
         Get-Content $log -Tail 160

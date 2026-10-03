@@ -9,7 +9,7 @@
 5. `04_BUILD_AND_RELEASE.md`：生成 Windows、WebGL、Android 和 Release 附件。
 6. `05_INTERVIEW_TALK.md`：面试时如何用 3-5 分钟讲清项目。
 7. `devlogs/`：从算法基线到发布版本的开发留痕。
+8. `devlogs/04-first-playtest-bugfix.md`：首次试玩反馈、原因、修复和复测证据。
 
-这套文档以 `v1.0.0` 为准。学习时先运行项目，再按架构文档逐个定位脚本，
-不要试图一次记住全部实现。
-
+`04_BUILD_AND_RELEASE.md` 保留 `v1.0.0` 的首次发布流程；首次试玩补丁的交付状态和
+步骤见 `06_V1_0_1_PATCH_RELEASE.md`。学习时先运行项目，再按架构文档逐个定位脚本。

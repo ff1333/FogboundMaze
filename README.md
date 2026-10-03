@@ -8,6 +8,7 @@ enters through the start gate, survives zombie attacks, and reaches the exit.
 
 - Ten deterministic, progressively harder maze levels
 - Runtime maze generation with guaranteed start-to-exit connectivity
+- Fog-of-war mini-map that marks visited cells without revealing the solution
 - Switchable first-person and third-person cameras
 - Ranged and melee weapons with distinct risk/reward
 - Grid A* navigation and explicit zombie AI states
@@ -25,11 +26,22 @@ enters through the start gate, survives zombie attacks, and reaches the exit.
 Development evidence, architecture notes, tests and release instructions live
 under `docs/`.
 
+## Screenshots
+
+![First-person view and exploration map](docs/images/v1.0.1-first-person.png)
+
+![Weapon selection](docs/images/v1.0.1-selection.png)
+
+![Pause and exit menu](docs/images/v1.0.1-pause.png)
+
 ## Release Status
 
-- Version: `v1.0.0`
-- EditMode tests: `8/8 PASS`
-- PlayMode tests: `5/5 PASS`
-- Builds: Windows, WebGL and Android (`0 errors`, `0 warnings`)
+- Local version: `v1.0.1` first-playtest fix (`v1.0.0` remains the original release)
+- EditMode tests: `9/9 PASS`
+- PlayMode tests: `10/10 PASS`
+- Windows, WebGL and Android release builds: `0 errors`, `0 warnings`
+- Windows Release Player smoke: `PASS`; WebGL browser interaction and Android device acceptance: `PENDING`
+- Release attachments: `Builds/Packages/v1.0.1/` (ignored by Git; upload them to GitHub Release)
 - Start here: [`docs/README.md`](docs/README.md)
-- Release checklist: [`docs/04_BUILD_AND_RELEASE.md`](docs/04_BUILD_AND_RELEASE.md)
+- Playtest bug-fix log: [`docs/devlogs/04-first-playtest-bugfix.md`](docs/devlogs/04-first-playtest-bugfix.md)
+- Patch release checklist: [`docs/06_V1_0_1_PATCH_RELEASE.md`](docs/06_V1_0_1_PATCH_RELEASE.md)

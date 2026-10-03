@@ -30,6 +30,7 @@
 | 环境 | `EnvironmentController` | 雾、光照与昼夜循环 |
 | 输入 | `GameInput` | Input System 与触控输入统一 |
 | UI | `GameHud` | HUD、武器选择、暂停与结算 |
+| 探索地图 | `MazeExploration`、`MiniMapHud` | 只记录已走格子，以小纹理显示已探索路径和朝向 |
 
 ## 为什么不用 NavMesh
 
@@ -51,3 +52,8 @@
 系统之间优先通过公开状态和事件通信，例如 `Health.Died`，而不是在多个脚本里
 重复查询场景对象。
 
+## 探索小地图
+
+`MazeExploration` 只保存玩家真正走过的格子，起点默认已知，退出和通路不会提前揭晓。
+`MiniMapHud` 只在进入新格子时重绘小纹理，而不是每帧重建数百个 UI 元素；当前位置与
+相机朝向的标记单独更新。每关加载时创建新的探索记录，避免把上一关的信息带进来。
