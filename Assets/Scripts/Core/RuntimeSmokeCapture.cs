@@ -16,6 +16,8 @@ namespace FogboundMaze
             var pause = System.Array.Exists(arguments, value => value == "-fogboundPause");
             var mapTrail = System.Array.Exists(arguments, value => value == "-fogboundMapTrail");
             var walkRoute = System.Array.Exists(arguments, value => value == "-fogboundWalkRoute");
+            var healthCheck = System.Array.Exists(arguments, value => value == "-fogboundHealthCheck");
+            var fatalHit = System.Array.Exists(arguments, value => value == "-fogboundFatalHit");
             yield return new WaitForSecondsRealtime(1f);
 
             if (pause)
@@ -70,12 +72,35 @@ namespace FogboundMaze
                         director.World.Layout.Start, director.World.Layout.Goal);
                     for (var i = 0; i < Mathf.Min(5, path.Count); i++)
                     {
-                        director.Player.transform.position = director.World.CellToWorld(path[i]) + Vector3.up * 0.2f;
+                        director.Player.Teleport(director.World.CellToWorld(path[i]) + Vector3.up * 0.2f);
                         yield return null;
                         yield return null;
                     }
                 }
                 yield return new WaitForSecondsRealtime(2.5f);
+            }
+
+            if (healthCheck || fatalHit)
+            {
+                var director = GameDirector.Instance;
+                director.Player.Health.Damage(fatalHit ? 200f : 65f);
+                Canvas.ForceUpdateCanvases();
+                var top = director.Hud.transform.Find("Top Bar");
+                var text = top.Find("Health").GetComponent<UnityEngine.UI.Text>().text;
+                var track = top.Find("Health Track").GetComponent<RectTransform>();
+                var fill = track.Find("Health Fill").GetComponent<RectTransform>();
+                var ratio = fill.rect.width / track.rect.width;
+                var expected = fatalHit ? 0f : 0.35f;
+                if (Mathf.Abs(ratio - expected) > 0.005f
+                    || text != (fatalHit ? "HP  0 / 100" : "HP  35 / 100")
+                    || (fatalHit && director.Phase != GamePhase.Lost))
+                {
+                    Debug.LogError($"FOGBOUND_HEALTH_FAIL text={text} ratio={ratio} phase={director.Phase}");
+                    Application.Quit(2);
+                    yield break;
+                }
+                Debug.Log($"FOGBOUND_HEALTH_PASS text={text} ratio={ratio} phase={director.Phase}");
+                yield return null;
             }
 
             if (!string.IsNullOrWhiteSpace(output))

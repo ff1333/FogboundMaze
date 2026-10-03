@@ -45,7 +45,8 @@ public static class FogboundProjectBuilder
                 var metrics = MazeComplexity.Measure(maze, level);
                 Debug.Log($"FOGBOUND_LEVEL_{level.levelNumber:00} {maze.Width}x{maze.Height} " +
                           $"route={metrics.SolutionLength} turns={metrics.Turns} deadEnds={metrics.DeadEnds} " +
-                          $"junctions={metrics.Junctions} score={metrics.Score:F3}");
+                          $"junctions={metrics.Junctions} choices={metrics.RouteChoices} " +
+                          $"firstChoice={metrics.FirstChoice} maxGap={metrics.LongestChoiceGap} score={metrics.Score:F3}");
             }
             catch (Exception exception)
             {
@@ -87,7 +88,7 @@ public static class FogboundProjectBuilder
     {
         PlayerSettings.companyName = "FF1333";
         PlayerSettings.productName = "Fogbound Maze";
-        PlayerSettings.bundleVersion = "1.0.2";
+        PlayerSettings.bundleVersion = "1.0.3";
         PlayerSettings.defaultScreenWidth = 1280;
         PlayerSettings.defaultScreenHeight = 720;
         PlayerSettings.defaultIsFullScreen = false;

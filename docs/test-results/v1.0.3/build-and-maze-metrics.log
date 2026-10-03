@@ -1,0 +1,14 @@
+FOGBOUND_LEVEL_01 7x7 route=17 turns=12 deadEnds=12 junctions=10 choices=8 firstChoice=2 maxGap=2 score=0.474
+FOGBOUND_LEVEL_02 8x8 route=21 turns=15 deadEnds=15 junctions=12 choices=7 firstChoice=0 maxGap=7 score=0.453
+FOGBOUND_LEVEL_03 9x9 route=25 turns=14 deadEnds=20 junctions=17 choices=13 firstChoice=0 maxGap=3 score=0.386
+FOGBOUND_LEVEL_04 10x10 route=29 turns=20 deadEnds=23 junctions=21 choices=13 firstChoice=0 maxGap=5 score=0.407
+FOGBOUND_LEVEL_05 11x10 route=32 turns=22 deadEnds=25 junctions=23 choices=13 firstChoice=2 maxGap=5 score=0.399
+FOGBOUND_LEVEL_06 11x11 route=35 turns=22 deadEnds=26 junctions=23 choices=11 firstChoice=0 maxGap=7 score=0.374
+FOGBOUND_LEVEL_07 12x11 route=38 turns=28 deadEnds=28 junctions=25 choices=13 firstChoice=1 maxGap=6 score=0.395
+FOGBOUND_LEVEL_08 13x12 route=42 turns=25 deadEnds=35 junctions=31 choices=11 firstChoice=1 maxGap=8 score=0.344
+FOGBOUND_LEVEL_09 14x13 route=46 turns=32 deadEnds=40 junctions=36 choices=16 firstChoice=1 maxGap=5 score=0.350
+FOGBOUND_LEVEL_10 15x14 route=50 turns=34 deadEnds=44 junctions=40 choices=20 firstChoice=0 maxGap=4 score=0.329
+FOGBOUND_VALIDATION_PASS
+FOGBOUND_PLATFORM_BUILD target=StandaloneWindows64 result=Succeeded errors=0 warnings=0 size=91579438
+FOGBOUND_PLATFORM_BUILD target=WebGL result=Succeeded errors=0 warnings=0 size=10737808
+FOGBOUND_PLATFORM_BUILD target=Android result=Succeeded errors=0 warnings=0 size=445341919

@@ -7,6 +7,39 @@ namespace FogboundMaze.Tests
 {
     public sealed class MazeCoreTests
     {
+        [Test]
+        public void Campaign_HasFrequentBranchesInsteadOfLongSingleCorridors()
+        {
+            foreach (var level in LevelCatalog.CreateDefault())
+            {
+                var maze = MazeGenerator.GenerateForLevel(level);
+                var path = MazePathfinder.FindPath(maze, maze.Start, maze.Goal);
+                var junctions = MazeComplexity.Measure(maze, level).Junctions;
+                var firstChoice = -1;
+                var routeChoices = 0;
+                var gap = 0;
+                var longestGap = 0;
+                for (var i = 0; i < path.Count; i++)
+                {
+                    var exits = 0;
+                    foreach (var neighbor in maze.GetOpenNeighbors(path[i])) exits++;
+                    var choice = exits >= (i == 0 ? 2 : 3);
+                    if (choice)
+                    {
+                        if (firstChoice < 0) firstChoice = i;
+                        routeChoices++;
+                        gap = 0;
+                    }
+                    else longestGap = Mathf.Max(longestGap, ++gap);
+                }
+                TestContext.WriteLine($"Level {level.levelNumber}: route={path.Count} junctions={junctions} routeChoices={routeChoices} firstChoice={firstChoice} longestGap={longestGap}");
+                Assert.That(junctions, Is.GreaterThanOrEqualTo(Mathf.CeilToInt(maze.Width * maze.Height * 0.18f)));
+                Assert.That(firstChoice, Is.InRange(0, 3));
+                Assert.That(routeChoices, Is.GreaterThanOrEqualTo(Mathf.CeilToInt(path.Count / 6f)));
+                Assert.That(longestGap, Is.LessThanOrEqualTo(8));
+            }
+        }
+
         [TestCase(7, 7, 1101)]
         [TestCase(10, 10, 4409)]
         [TestCase(15, 14, 10151)]
@@ -18,6 +51,22 @@ namespace FogboundMaze.Tests
             Assert.That(path, Is.Not.Empty);
             Assert.That(path[0], Is.EqualTo(Vector2Int.zero));
             Assert.That(path[^1], Is.EqualTo(new Vector2Int(width - 1, height - 1)));
+            var reached = new HashSet<Vector2Int> { maze.Start };
+            var pending = new Queue<Vector2Int>();
+            pending.Enqueue(maze.Start);
+            while (pending.Count > 0)
+            {
+                var cell = pending.Dequeue();
+                foreach (var direction in MazeDirections.All)
+                {
+                    if (!maze[cell].IsOpen(direction)) continue;
+                    var next = cell + MazeDirections.ToOffset(direction);
+                    Assert.That(maze.Contains(next), Is.True, "Passage must not escape the grid");
+                    Assert.That(maze[next].IsOpen(MazeDirections.Opposite(direction)), Is.True);
+                    if (reached.Add(next)) pending.Enqueue(next);
+                }
+            }
+            Assert.That(reached.Count, Is.EqualTo(width * height), "All branches must be reachable");
         }
 
         [Test]

@@ -5,12 +5,16 @@ namespace FogboundMaze
 {
     public readonly struct MazeMetrics
     {
-        public MazeMetrics(int solutionLength, int turns, int deadEnds, int junctions, float score)
+        public MazeMetrics(int solutionLength, int turns, int deadEnds, int junctions,
+            int routeChoices, int firstChoice, int longestChoiceGap, float score)
         {
             SolutionLength = solutionLength;
             Turns = turns;
             DeadEnds = deadEnds;
             Junctions = junctions;
+            RouteChoices = routeChoices;
+            FirstChoice = firstChoice;
+            LongestChoiceGap = longestChoiceGap;
             Score = score;
         }
 
@@ -18,6 +22,9 @@ namespace FogboundMaze
         public int Turns { get; }
         public int DeadEnds { get; }
         public int Junctions { get; }
+        public int RouteChoices { get; }
+        public int FirstChoice { get; }
+        public int LongestChoiceGap { get; }
         public float Score { get; }
     }
 
@@ -47,13 +54,28 @@ namespace FogboundMaze
             }
 
             var cellCount = layout.Width * layout.Height;
+            var routeChoices = 0;
+            var firstChoice = path.Count;
+            var longestChoiceGap = 0;
+            var gap = 0;
+            for (var i = 0; i < path.Count; i++)
+            {
+                if (CountPassages(layout[path[i]].Passages) >= (i == 0 ? 2 : 3))
+                {
+                    firstChoice = Mathf.Min(firstChoice, i);
+                    routeChoices++;
+                    gap = 0;
+                }
+                else longestChoiceGap = Mathf.Max(longestChoiceGap, ++gap);
+            }
             var routeRatio = path.Count / (float)cellCount;
             var deadEndRatio = deadEnds / (float)cellCount;
             var turnRatio = path.Count > 2 ? turns / (float)(path.Count - 2) : 0f;
             var score = routeRatio * level.routeWeight
                         + deadEndRatio * level.deadEndWeight
                         + turnRatio * level.turnWeight;
-            return new MazeMetrics(path.Count, turns, deadEnds, junctions, score);
+            return new MazeMetrics(path.Count, turns, deadEnds, junctions,
+                routeChoices, firstChoice, longestChoiceGap, score);
         }
 
         private static int CountTurns(IReadOnlyList<Vector2Int> path)
@@ -87,4 +109,3 @@ namespace FogboundMaze
         }
     }
 }
-

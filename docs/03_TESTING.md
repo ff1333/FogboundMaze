@@ -1,6 +1,7 @@
 # 测试说明
 
-当前 v1.0.2：EditMode 9/9、PlayMode 13/13 PASS。新增十关实体主路线与全部开放岔路、出生区/出口围挡、异常掉落恢复测试。详见 `devlogs/05-entry-geometry-regression.md`。
+当前 v1.0.3：EditMode 10/10、PlayMode 16/16 PASS。新增血条实际宽度、死亡同帧同步、小地图未知出口标记与十关分岔质量验证。Windows 正式包另有低血量/死亡画面烟测，详见 `devlogs/06-health-hud-and-branching.md`。
+v1.0.2 的 EditMode 9/9、PlayMode 13/13 是历史结果。十关实体主路线与全部开放岔路、出生区/出口围挡、异常掉落恢复测试在本次也通过。
 下文 v1.0.1 的 10/10 结果是历史记录，未覆盖其后用户发现的实体墙体堵路问题。
 
 ## EditMode

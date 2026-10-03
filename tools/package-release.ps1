@@ -1,13 +1,13 @@
 $ErrorActionPreference = "Stop"
 
 $project = Split-Path -Parent $PSScriptRoot
-$packageDirectory = Join-Path $project "Builds\Packages\v1.0.2"
-$windowsSource = Join-Path $project "Builds\Windows\v1.0.2"
-$webglSource = Join-Path $project "Builds\WebGL\v1.0.2\*"
-$androidSource = Join-Path $project "Builds\Android\FogboundMaze-v1.0.2.apk"
-$windowsArchive = Join-Path $packageDirectory "FogboundMaze-Windows-v1.0.2.zip"
-$webglArchive = Join-Path $packageDirectory "FogboundMaze-WebGL-v1.0.2.zip"
-$androidPackage = Join-Path $packageDirectory "FogboundMaze-Android-v1.0.2.apk"
+$packageDirectory = Join-Path $project "Builds\Packages\v1.0.3"
+$windowsSource = Join-Path $project "Builds\Windows\v1.0.3"
+$webglSource = Join-Path $project "Builds\WebGL\v1.0.3\*"
+$androidSource = Join-Path $project "Builds\Android\FogboundMaze-v1.0.3.apk"
+$windowsArchive = Join-Path $packageDirectory "FogboundMaze-Windows-v1.0.3.zip"
+$webglArchive = Join-Path $packageDirectory "FogboundMaze-WebGL-v1.0.3.zip"
+$androidPackage = Join-Path $packageDirectory "FogboundMaze-Android-v1.0.3.apk"
 $checksumFile = Join-Path $packageDirectory "SHA256SUMS.txt"
 
 New-Item -ItemType Directory -Force -Path $packageDirectory | Out-Null

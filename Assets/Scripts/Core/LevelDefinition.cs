@@ -11,7 +11,7 @@ namespace FogboundMaze
         [Min(4)] public int width;
         [Min(4)] public int height;
         public int seed;
-        [Range(1, 32)] public int mazeCandidateCount;
+        [Range(1, 512)] public int mazeCandidateCount;
         [Min(4)] public int targetRouteLength;
         [Range(0f, 1f)] public float routeWeight;
         [Range(0f, 1f)] public float deadEndWeight;
@@ -51,16 +51,16 @@ namespace FogboundMaze
         {
             return new[]
             {
-                Make(1, 7, 7, 1101, 6, 23, 4, 6.0f, 0.00f, 0.002f, false, false),
-                Make(2, 8, 8, 2203, 8, 31, 5, 5.4f, 0.00f, 0.004f, false, false),
-                Make(3, 9, 9, 3307, 10, 43, 6, 4.9f, 0.00f, 0.007f, false, false),
-                Make(4, 10, 10, 4409, 12, 55, 7, 4.4f, 0.00f, 0.016f, false, false),
-                Make(5, 11, 10, 5513, 15, 65, 8, 4.0f, 0.14f, 0.020f, false, false),
-                Make(6, 11, 11, 6619, 18, 75, 9, 3.7f, 0.18f, 0.023f, true, false),
-                Make(7, 12, 11, 7723, 20, 85, 10, 3.4f, 0.22f, 0.026f, true, true),
-                Make(8, 13, 12, 8837, 24, 97, 11, 3.1f, 0.26f, 0.030f, true, true),
-                Make(9, 14, 13, 9941, 28, 111, 12, 2.8f, 0.31f, 0.034f, true, true),
-                Make(10, 15, 14, 10151, 32, 127, 14, 2.5f, 0.38f, 0.038f, true, true)
+                Make(1, 7, 7, 1101, 96, 17, 4, 6.0f, 0.00f, 0.002f, false, false),
+                Make(2, 8, 8, 2203, 128, 21, 5, 5.4f, 0.00f, 0.004f, false, false),
+                Make(3, 9, 9, 3307, 160, 25, 6, 4.9f, 0.00f, 0.007f, false, false),
+                Make(4, 10, 10, 4409, 192, 29, 7, 4.4f, 0.00f, 0.016f, false, false),
+                Make(5, 11, 10, 5513, 240, 32, 8, 4.0f, 0.14f, 0.020f, false, false),
+                Make(6, 11, 11, 6619, 288, 35, 9, 3.7f, 0.18f, 0.023f, true, false),
+                Make(7, 12, 11, 7723, 320, 38, 10, 3.4f, 0.22f, 0.026f, true, true),
+                Make(8, 13, 12, 8837, 384, 42, 11, 3.1f, 0.26f, 0.030f, true, true),
+                Make(9, 14, 13, 9941, 448, 46, 12, 2.8f, 0.31f, 0.034f, true, true),
+                Make(10, 15, 14, 10151, 512, 50, 14, 2.5f, 0.38f, 0.038f, true, true)
             };
         }
 

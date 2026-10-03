@@ -9,6 +9,68 @@ namespace FogboundMaze.Tests
     public sealed class GameFlowTests
     {
         [UnityTest]
+        public IEnumerator HealthBar_TracksDamageHealingAndRetryInRenderedWidth()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Pistol);
+            director.Player.Health.Damage(65f);
+            yield return null;
+            AssertHealthDisplay(director, 35, 0.35f);
+            director.Player.Health.Heal(15f);
+            yield return null;
+            AssertHealthDisplay(director, 50, 0.5f);
+            director.Retry();
+            yield return null;
+            AssertHealthDisplay(director, 100, 1f);
+        }
+
+        [Test]
+        public void FatalDamage_ImmediatelyDisplaysZeroWithResultPanel()
+        {
+            var director = GameDirector.Instance;
+            director.SelectWeapon(WeaponType.Machete);
+            director.BeginRun();
+            director.Player.Health.Damage(91f);
+            director.Hud.Refresh(director, director.Player);
+            director.Player.Health.Damage(20f);
+            Assert.That(director.Phase, Is.EqualTo(GamePhase.Lost));
+            Assert.That(director.Hud.transform.Find("Result").gameObject.activeSelf, Is.True);
+            AssertHealthDisplay(director, 0, 0f);
+        }
+
+        private static void AssertHealthDisplay(GameDirector director, int current, float fraction)
+        {
+            Canvas.ForceUpdateCanvases();
+            var top = director.Hud.transform.Find("Top Bar");
+            Assert.That(top.Find("Health").GetComponent<UnityEngine.UI.Text>().text,
+                Is.EqualTo($"HP  {current} / 100"));
+            var track = top.Find("Health Track").GetComponent<RectTransform>();
+            var fill = track.Find("Health Fill").GetComponent<RectTransform>();
+            Assert.That(fill.rect.width / track.rect.width, Is.EqualTo(fraction).Within(0.005f));
+        }
+
+        [Test]
+        public void MiniMap_ShowsUnvisitedExitMouthWithoutRevealingNeighbor()
+        {
+            var director = GameDirector.Instance;
+            var texture = (Texture2D)director.Hud.transform.Find("Exploration Map/Visited Cells")
+                .GetComponent<UnityEngine.UI.RawImage>().texture;
+            var start = director.World.Layout.Start;
+            var checkedExits = 0;
+            foreach (var neighbor in director.World.Layout.GetOpenNeighbors(start))
+            {
+                var offset = neighbor - start;
+                var mouth = new Vector2Int(start.x * 12 + 6, start.y * 12 + 6) + offset * 6;
+                Assert.That((Color32)texture.GetPixel(mouth.x, mouth.y), Is.EqualTo(new Color32(211, 164, 80, 255)));
+                Assert.That((Color32)texture.GetPixel(neighbor.x * 12 + 6, neighbor.y * 12 + 6),
+                    Is.EqualTo(new Color32(13, 22, 25, 255)));
+                checkedExits++;
+            }
+            Assert.That(checkedExits, Is.GreaterThan(0));
+            Assert.That(director.Hud.ExploredCells, Is.EqualTo(1));
+        }
+
+        [UnityTest]
         public IEnumerator PhysicalMazeRoutes_AreWalkableInAllTenLevels()
         {
             var director = GameDirector.Instance;
@@ -152,7 +214,8 @@ namespace FogboundMaze.Tests
             director.BeginRun();
             foreach (var next in director.World.Layout.GetOpenNeighbors(director.World.Layout.Start))
             {
-                director.Player.transform.position = director.World.CellToWorld(next) + Vector3.up * 0.2f;
+                director.Player.Teleport(director.World.CellToWorld(next) + Vector3.up * 0.2f);
+                Physics.SyncTransforms();
                 Assert.That(director.World.IsInside(director.Player.transform.position), Is.True);
                 Assert.That(Object.FindFirstObjectByType<MiniMapHud>().isActiveAndEnabled, Is.True);
                 yield return null;
@@ -273,7 +336,8 @@ namespace FogboundMaze.Tests
 
             var unsafePosition = FindUnsafeCell(director);
             Assert.That(unsafePosition.HasValue, Is.True);
-            director.Player.transform.position = unsafePosition.Value + Vector3.up * 0.2f;
+            director.Player.Teleport(unsafePosition.Value + Vector3.up * 0.2f);
+            Physics.SyncTransforms();
             var before = director.Player.Health.Current;
             yield return new WaitForSeconds(0.45f);
             Assert.That(director.Player.Health.Current, Is.LessThan(before));

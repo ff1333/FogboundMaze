@@ -1,7 +1,7 @@
 # Fogbound Maze 文档入口
 
-当前入口堵路、边缘掉落修复与复测步骤：先看 `07_V1_0_2_ENTRY_FIX.md`。
-v1.0.1 的测试漏查了实体通路，原因与新增证据见 `devlogs/05-entry-geometry-regression.md`。
+当前版本 v1.0.3，先看 `08_V1_0_3_HUD_AND_BRANCHES.md`：血条、死亡显示和迷宫分岔的修复与复测。
+上一版入口/防掉落的历史记录见 `07_V1_0_2_ENTRY_FIX.md`，本次继续保留并通过实体通路回归。
 
 建议按下面顺序阅读：
 

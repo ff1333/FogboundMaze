@@ -128,6 +128,7 @@ namespace FogboundMaze
             PlayerPrefs.SetInt("Fogbound.UnlockedLevel", unlocked);
             PlayerPrefs.SetInt("Fogbound.SelectedLevel", Mathf.Min(10, currentLevel + 1));
             PlayerPrefs.Save();
+            Hud.Refresh(this, player);
             Hud.ShowResult(true, currentLevel, elapsed, kills);
             SetCursorLocked(false);
         }
@@ -200,6 +201,7 @@ namespace FogboundMaze
             player.Initialize(input, cameraRig);
             player.Health.Died += _ => Lose();
             Hud = GameHud.Create(input);
+            Hud.BindHealth(player.Health);
         }
 
         private PlayerController CreatePlayer()
@@ -260,6 +262,7 @@ namespace FogboundMaze
         {
             if (Phase is GamePhase.Lost or GamePhase.Won) return;
             Phase = GamePhase.Lost;
+            Hud.Refresh(this, player);
             Hud.ShowResult(false, currentLevel, elapsed, kills);
             SetCursorLocked(false);
         }

@@ -12,6 +12,7 @@ namespace FogboundMaze
         private static readonly Color32 Boundary = new(20, 38, 41, 255);
         private static readonly Color32 Start = new(226, 174, 94, 255);
         private static readonly Color32 Goal = new(52, 227, 177, 255);
+        private static readonly Color32 UnexploredExit = new(211, 164, 80, 255);
 
         private RawImage mapImage;
         private RectTransform marker;
@@ -160,6 +161,16 @@ namespace FogboundMaze
                     Rect(pixels, width, x, y, 2, PixelsPerCell, Boundary);
                 if (cell == layout.Start || cell == layout.Goal)
                     Rect(pixels, width, x + 4, y + 4, 4, 4, cell == layout.Start ? Start : Goal);
+                // Mark only the mouth of an unvisited branch, without revealing its destination.
+                foreach (var direction in MazeDirections.All)
+                {
+                    var offset = MazeDirections.ToOffset(direction);
+                    var neighbor = cell + offset;
+                    if (!mazeCell.IsOpen(direction) || !layout.Contains(neighbor) || exploration.IsVisited(neighbor))
+                        continue;
+                    Rect(pixels, width, x + 4 + offset.x * 6, y + 4 + offset.y * 6,
+                        4, 4, UnexploredExit);
+                }
             }
             texture.SetPixels32(pixels);
             texture.Apply(false);

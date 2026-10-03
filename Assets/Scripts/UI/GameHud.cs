@@ -18,6 +18,7 @@ namespace FogboundMaze
         private Font font;
         private Text healthText;
         private Image healthFill;
+        private Health observedHealth;
         private Text levelText;
         private Text weaponText;
         private Text timerText;
@@ -57,9 +58,7 @@ namespace FogboundMaze
 
         public void Refresh(GameDirector director, PlayerController player)
         {
-            healthText.text = $"HP  {Mathf.CeilToInt(player.Health.Current)} / {Mathf.CeilToInt(player.Health.Maximum)}";
-            healthFill.fillAmount = player.Health.Maximum > 0f
-                ? Mathf.Clamp01(player.Health.Current / player.Health.Maximum) : 0f;
+            RefreshHealth(player.Health);
             levelText.text = $"LEVEL  {director.CurrentLevel.levelNumber:00}";
             timerText.text = TimeSpan.FromSeconds(director.Elapsed).ToString(@"mm\:ss");
             killsText.text = $"KILLS  {director.Kills:000}";
@@ -73,6 +72,27 @@ namespace FogboundMaze
                 ? (director.IsPlayerSafe ? "LIGHT SAFE" : "MIASMA EXPOSED")
                 : string.Empty;
             statusText.color = director.IsPlayerSafe ? Accent : Warning;
+        }
+
+        public void BindHealth(Health health)
+        {
+            if (observedHealth != null) observedHealth.Changed -= RefreshHealth;
+            observedHealth = health;
+            observedHealth.Changed += RefreshHealth;
+            RefreshHealth(observedHealth);
+        }
+
+        private void RefreshHealth(Health health)
+        {
+            healthText.text = $"HP  {Mathf.CeilToInt(health.Current)} / {Mathf.CeilToInt(health.Maximum)}";
+            var ratio = health.Maximum > 0f ? Mathf.Clamp01(health.Current / health.Maximum) : 0f;
+            // This solid-color Image has no sprite, so size its rect instead of using Filled.
+            healthFill.rectTransform.anchorMax = new Vector2(ratio, 1f);
+        }
+
+        private void OnDestroy()
+        {
+            if (observedHealth != null) observedHealth.Changed -= RefreshHealth;
         }
 
         public void ShowWeaponSelection(int level)
@@ -165,8 +185,6 @@ namespace FogboundMaze
             SetRect(healthTrack.GetComponent<RectTransform>(), new Vector2(0.02f, 0.18f), new Vector2(0.25f, 0.31f));
             healthFill = PanelObject("Health Fill", healthTrack.transform, new Color(0.95f, 0.34f, 0.42f)).GetComponent<Image>();
             SetRect(healthFill.rectTransform, Vector2.zero, Vector2.one);
-            healthFill.type = Image.Type.Filled;
-            healthFill.fillMethod = Image.FillMethod.Horizontal;
             healthTrack.GetComponent<Image>().raycastTarget = false;
             healthFill.raycastTarget = false;
             timerText = Label("Timer", bar.transform, "00:00", 31, TextAnchor.MiddleCenter);

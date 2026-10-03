@@ -18,8 +18,8 @@
 | 模块 | 关键脚本 | 职责 |
 | --- | --- | --- |
 | 流程 | `GameDirector` | 阶段、关卡、存档、生成、胜负 |
-| 迷宫 | `MazeGenerator` | 固定种子的递归回溯生成 |
-| 难度 | `MazeComplexity` | 路线、转弯、死路和岔路评分 |
+| 迷宫 | `MazeGenerator` | 固定种子的 Growing Tree 混合生长与候选筛选 |
+| 难度 | `MazeComplexity` | 路线、转弯、死路、全图路口及主路线选择间距 |
 | 寻路 | `MazePathfinder` | 网格 A* 与路径重建 |
 | 世界 | `MazeWorld` | 生成碰撞体、门、灯和坐标转换 |
 | 玩家 | `PlayerController` | CharacterController 移动与重力 |
@@ -30,7 +30,7 @@
 | 环境 | `EnvironmentController` | 雾、光照与昼夜循环 |
 | 输入 | `GameInput` | Input System 与触控输入统一 |
 | UI | `GameHud` | HUD、武器选择、暂停与结算 |
-| 探索地图 | `MazeExploration`、`MiniMapHud` | 只记录已走格子，以小纹理显示已探索路径和朝向 |
+| 探索地图 | `MazeExploration`、`MiniMapHud` | 记录已走格子，以小纹理显示路径、朝向和未探索岔路口 |
 
 ## 为什么不用 NavMesh
 
@@ -52,8 +52,13 @@
 系统之间优先通过公开状态和事件通信，例如 `Health.Died`，而不是在多个脚本里
 重复查询场景对象。
 
+HUD 订阅 `Health.Changed`，扣血、治疗与重置时立即更新文字和血条宽度，并在销毁时退订。
+纯色 Image 没有 Sprite 时不能依赖 Filled 的填充裁切，血条通过 RectTransform 的横向锚点比例控制宽度。
+胜负结算前还会刷新顶栏，避免阶段切换后停止 Update 导致最后一帧数据滞后。
+
 ## 探索小地图
 
-`MazeExploration` 只保存玩家真正走过的格子，起点默认已知，退出和通路不会提前揭晓。
+`MazeExploration` 只保存玩家真正走过的格子，起点默认已知，终点与未走区域不会提前揭晓。
+已走格子通往未走区域的开口显示金色短标记，只展示路口，不展示邻格中心或更远的路径。
 `MiniMapHud` 只在进入新格子时重绘小纹理，而不是每帧重建数百个 UI 元素；当前位置与
 相机朝向的标记单独更新。每关加载时创建新的探索记录，避免把上一关的信息带进来。
