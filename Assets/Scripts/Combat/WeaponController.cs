@@ -57,16 +57,24 @@ namespace FogboundMaze
             foreach (Transform child in viewMount) Destroy(child.gameObject);
             worldWeapon = null;
             viewWeapon = null;
+            owner.GetComponent<PlayerVisual>()?.Equip(type);
             if (type == WeaponType.None)
             {
                 return;
             }
-            worldWeapon = CreateWeaponModel(mount, type);
+            // The survivor FBX already has weapon sockets animated with the hands.
             viewWeapon = CreateWeaponModel(viewMount, type);
         }
 
         private Transform CreateWeaponModel(Transform parent, WeaponType weaponType)
         {
+            var prefab = Resources.Load<GameObject>(weaponType == WeaponType.Pistol ? "Weapons/Pistol" : "Weapons/Knife");
+            if (prefab != null)
+            {
+                var model = Instantiate(prefab, parent).transform;
+                foreach (var child in model.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+                return model;
+            }
             var root = new GameObject(weaponType.ToString()).transform;
             root.SetParent(parent, false);
             root.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
@@ -166,6 +174,7 @@ namespace FogboundMaze
             else
             {
                 nextAttack = Time.time + 0.62f;
+                owner.GetComponent<PlayerVisual>()?.Attack();
                 audioSource.PlayOneShot(ProceduralAudio.Machete);
                 StartCoroutine(Swing());
                 var forward = viewCamera.transform.forward;

@@ -1,6 +1,8 @@
 # Fogbound Maze 文档入口
 
-当前版本 v1.0.3，先看 `08_V1_0_3_HUD_AND_BRANCHES.md`：血条、死亡显示和迷宫分岔的修复与复测。
+当前版本 **v1.1.0**，现在只需先看 [09_V1_1_0_MENU_AND_CHARACTERS.md](09_V1_1_0_MENU_AND_CHARACTERS.md)：开始界面、十关选择、本地通关记录、新角色，以及复测和发布步骤。
+本次开发日志见 [devlogs/07-campaign-menu-and-character-art.md](devlogs/07-campaign-menu-and-character-art.md)。
+`08_V1_0_3_HUD_AND_BRANCHES.md` 是上一版血条、死亡显示和迷宫分岔的历史记录。
 上一版入口/防掉落的历史记录见 `07_V1_0_2_ENTRY_FIX.md`，本次继续保留并通过实体通路回归。
 
 建议按下面顺序阅读：

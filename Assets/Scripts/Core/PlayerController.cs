@@ -41,11 +41,12 @@ namespace FogboundMaze
                 return;
             }
 
-            cameraRig.TickLook(input.Look, input.ToggleViewPressed);
-            if (GameDirector.Instance.Phase is GamePhase.Paused or GamePhase.Won or GamePhase.Lost)
+            if (GameDirector.Instance.Phase != GamePhase.Playing
+                && !(GameDirector.Instance.Phase == GamePhase.Staging && Weapon.Type != WeaponType.None))
             {
                 return;
             }
+            cameraRig.TickLook(input.Look, input.ToggleViewPressed);
 
             // Recovery is a fallback for an unexpected physics escape, not a substitute for walls.
             if (transform.position.y < -5f)

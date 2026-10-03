@@ -10,6 +10,7 @@ namespace FogboundMaze
         private float yaw;
         private float pitch = 4f;
         private bool firstPerson;
+        private bool menuView;
 
         public Camera Camera => viewCamera;
         public float Yaw => yaw;
@@ -47,6 +48,7 @@ namespace FogboundMaze
 
         public void ResetView()
         {
+            menuView = false;
             yaw = target.eulerAngles.y;
             pitch = 4f;
             firstPerson = false;
@@ -54,6 +56,15 @@ namespace FogboundMaze
             var rotation = Quaternion.Euler(pitch, yaw, 0f);
             var focus = target.position + Vector3.up * 1.55f;
             transform.SetPositionAndRotation(focus + rotation * new Vector3(0.55f, 0.15f, -3.2f), rotation);
+        }
+
+        public void ShowMenuView(Vector3 stage)
+        {
+            menuView = true;
+            firstPerson = false;
+            if (playerVisual != null) playerVisual.SetActive(true);
+            transform.position = stage + new Vector3(-1.65f, 1.9f, -2.3f);
+            transform.LookAt(stage + new Vector3(0.8f, 1.05f, 2.5f));
         }
 
         public void TickLook(Vector2 look, bool toggle)
@@ -68,7 +79,7 @@ namespace FogboundMaze
 
         private void LateUpdate()
         {
-            if (target == null)
+            if (target == null || menuView)
             {
                 return;
             }

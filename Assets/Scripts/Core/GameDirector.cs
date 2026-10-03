@@ -22,9 +22,11 @@ namespace FogboundMaze
         private int currentLevel;
         private GamePhase phaseBeforePause;
         private System.Random random;
+        private int runGeneration;
 
         public GamePhase Phase { get; private set; }
         public GameHud Hud { get; private set; }
+        public CampaignProgress Progress { get; private set; }
         public LevelDefinition CurrentLevel => level;
         public PlayerController Player => player;
         public MazeWorld World => world;
@@ -40,10 +42,12 @@ namespace FogboundMaze
         {
             Instance = this;
             levels = LevelCatalog.CreateDefault();
+            var smoke = System.Array.Exists(System.Environment.GetCommandLineArgs(), value => value == "-fogboundSmoke");
+            Progress = new CampaignProgress(smoke);
             BuildPersistentSystems();
-            var unlocked = PlayerPrefs.GetInt("Fogbound.UnlockedLevel", 1);
-            LoadLevel(Mathf.Clamp(PlayerPrefs.GetInt("Fogbound.SelectedLevel", unlocked), 1, 10));
-            if (System.Array.Exists(System.Environment.GetCommandLineArgs(), value => value == "-fogboundSmoke"))
+            LoadLevel(1);
+            ShowTitle();
+            if (smoke)
             {
                 gameObject.AddComponent<RuntimeSmokeCapture>();
             }
@@ -51,6 +55,7 @@ namespace FogboundMaze
 
         private void Update()
         {
+            if (input.PausePressed && Phase == GamePhase.LevelSelect) ShowTitle();
             if (Phase == GamePhase.Staging)
             {
                 if (player.Weapon.Type != WeaponType.None
@@ -124,10 +129,7 @@ namespace FogboundMaze
         {
             if (Phase != GamePhase.Playing) return;
             Phase = GamePhase.Won;
-            var unlocked = Mathf.Max(PlayerPrefs.GetInt("Fogbound.UnlockedLevel", 1), Mathf.Min(10, currentLevel + 1));
-            PlayerPrefs.SetInt("Fogbound.UnlockedLevel", unlocked);
-            PlayerPrefs.SetInt("Fogbound.SelectedLevel", Mathf.Min(10, currentLevel + 1));
-            PlayerPrefs.Save();
+            Progress.Complete(currentLevel);
             Hud.Refresh(this, player);
             Hud.ShowResult(true, currentLevel, elapsed, kills);
             SetCursorLocked(false);
@@ -138,9 +140,47 @@ namespace FogboundMaze
             kills += elite ? 2 : 1;
         }
 
-        public void Retry() => LoadLevel(currentLevel);
-        public void NextLevel() => LoadLevel(Mathf.Min(10, currentLevel + 1));
-        public void ReturnToLoadout() => LoadLevel(currentLevel);
+        public void Retry()
+        {
+            if (Phase is GamePhase.Title or GamePhase.LevelSelect) return;
+            LoadLevel(currentLevel);
+        }
+
+        public void NextLevel()
+        {
+            if (Phase == GamePhase.Won && currentLevel < 10 && Progress.IsUnlocked(currentLevel + 1))
+                LoadLevel(currentLevel + 1);
+        }
+
+        public void ReturnToLoadout() => Retry();
+
+        public bool SelectLevel(int number)
+        {
+            if (Phase != GamePhase.LevelSelect || !Progress.IsUnlocked(number)) return false;
+            LoadLevel(number);
+            return true;
+        }
+
+        public void ShowTitle() => ShowMenu(GamePhase.Title);
+        public void ShowLevelSelection() => ShowMenu(GamePhase.LevelSelect);
+
+        private void ShowMenu(GamePhase phase)
+        {
+            Time.timeScale = 1f;
+            runGeneration++;
+            pool.DespawnAll();
+            pendingSpawns = 0;
+            input.ResetMobile();
+            player.Weapon.Equip(WeaponType.None);
+            player.Teleport(world.StartPosition + Vector3.up * 0.08f);
+            player.Health.ResetHealth(100f);
+            player.transform.rotation = Quaternion.identity;
+            world.OpenStartGate();
+            Phase = phase;
+            cameraRig.ShowMenuView(world.StartPosition);
+            Hud.ShowCampaignMenu(phase, Progress);
+            SetCursorLocked(false);
+        }
 
         public void QuitGame()
         {
@@ -155,6 +195,10 @@ namespace FogboundMaze
 
         public void SetPaused(bool paused)
         {
+            if (paused && Phase != GamePhase.Playing
+                && !(Phase == GamePhase.Staging && player.Weapon.Type != WeaponType.None)) return;
+            if (!paused && Phase != GamePhase.Paused) return;
+            input.ResetMobile();
             if (paused) phaseBeforePause = Phase;
             Phase = paused ? GamePhase.Paused : phaseBeforePause;
             Time.timeScale = paused ? 0f : 1f;
@@ -165,6 +209,8 @@ namespace FogboundMaze
         private void LoadLevel(int number)
         {
             Time.timeScale = 1f;
+            runGeneration++;
+            input.ResetMobile();
             currentLevel = number;
             level = levels[number - 1];
             random = new System.Random(level.seed + 97);
@@ -172,7 +218,7 @@ namespace FogboundMaze
             pool.Prewarm(level.maxEnemies);
             pendingSpawns = 0;
             world.Build(level);
-            player.Teleport(world.StartPosition + Vector3.up * 0.2f);
+            player.Teleport(world.StartPosition + Vector3.up * 0.08f);
             player.transform.rotation = Quaternion.identity;
             cameraRig.ResetView();
             player.Health.ResetHealth(100f);
@@ -181,8 +227,6 @@ namespace FogboundMaze
             elapsed = 0f;
             kills = 0;
             Phase = GamePhase.Staging;
-            PlayerPrefs.SetInt("Fogbound.SelectedLevel", currentLevel);
-            PlayerPrefs.Save();
             Hud.ShowWeaponSelection(number);
             Hud.ResetMap(world, player, cameraRig);
             SetCursorLocked(false);
@@ -213,27 +257,12 @@ namespace FogboundMaze
             controller.radius = 0.34f;
             controller.center = Vector3.up * 0.93f;
             root.AddComponent<Health>();
-            var bodyMaterial = RuntimeArt.MaterialFromResource("FogboundPlayer", new Color(0.12f, 0.42f, 0.58f));
-            var visual = new GameObject("Visual").transform;
-            visual.SetParent(root.transform, false);
-            var body = RuntimeArt.Primitive(PrimitiveType.Cube, "Torso", visual,
-                Vector3.up * 1.2f, new Vector3(0.72f, 0.78f, 0.42f), bodyMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Sphere, "Head", visual,
-                new Vector3(0f, 1.82f, 0f), Vector3.one * 0.52f,
-                RuntimeArt.Material("Player Head", new Color(0.76f, 0.58f, 0.46f)), false);
-            RuntimeArt.Primitive(PrimitiveType.Capsule, "Leg L", visual,
-                new Vector3(-0.2f, 0.45f, 0f), new Vector3(0.26f, 0.48f, 0.26f), bodyMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Capsule, "Leg R", visual,
-                new Vector3(0.2f, 0.45f, 0f), new Vector3(0.26f, 0.48f, 0.26f), bodyMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Capsule, "Arm L", visual,
-                new Vector3(-0.48f, 1.2f, 0.05f), new Vector3(0.2f, 0.48f, 0.2f), bodyMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Capsule, "Arm R", visual,
-                new Vector3(0.48f, 1.2f, 0.05f), new Vector3(0.2f, 0.48f, 0.2f), bodyMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Cube, "Backpack", visual,
-                new Vector3(0f, 1.2f, -0.32f), new Vector3(0.58f, 0.62f, 0.2f),
-                RuntimeArt.Material("Backpack", new Color(0.14f, 0.18f, 0.17f), 0.05f, 0.18f), false);
+            var visual = Instantiate(Resources.Load<GameObject>("Characters/Survivor"), root.transform);
+            visual.name = "Visual";
+            foreach (var child in visual.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = root.layer;
+            var playerController = root.AddComponent<PlayerController>();
             root.AddComponent<PlayerVisual>();
-            return root.AddComponent<PlayerController>();
+            return playerController;
         }
 
         private void BeginEnemySpawn()
@@ -246,8 +275,10 @@ namespace FogboundMaze
                     continue;
                 var elite = random.NextDouble() < level.eliteChance;
                 pendingSpawns++;
+                var generation = runGeneration;
                 SpawnTelegraph.Create(position, elite, () =>
                 {
+                    if (generation != runGeneration) return;
                     pendingSpawns = Mathf.Max(0, pendingSpawns - 1);
                     if (Phase == GamePhase.Playing)
                     {

@@ -1,6 +1,12 @@
 # 测试说明
 
-当前 v1.0.3：EditMode 10/10、PlayMode 16/16 PASS。新增血条实际宽度、死亡同帧同步、小地图未知出口标记与十关分岔质量验证。Windows 正式包另有低血量/死亡画面烟测，详见 `devlogs/06-health-hud-and-branching.md`。
+当前 v1.1.0：EditMode **10/10**、PlayMode **21/21 PASS**。结果见 `test-results/v1.1.0/`。
+新增开始页到选关到选武器、锁关与存档、重载保留进度、菜单禁止移动、动画骨骼运动、敌人死亡和精英复用验证。
+Windows 正式包已检查开始页、选关页、武器页、角色、小窗口选关，以及手枪/刀第一人称各走过前六格。
+三平台 BuildReport 均成功且为 0 errors / 0 warnings；原始 Unity 日志含启动授权握手消息，不能据此宣称整份日志没有任何错误文字。
+WebGL 浏览器交互、Android 新版真机体验尚未完成，不能把构建成功当作平台验收。
+
+v1.0.3 的 EditMode 10/10、PlayMode 16/16 为历史结果，血条/死亡/岔路与实体通路用例保留并通过本次回归。
 v1.0.2 的 EditMode 9/9、PlayMode 13/13 是历史结果。十关实体主路线与全部开放岔路、出生区/出口围挡、异常掉落恢复测试在本次也通过。
 下文 v1.0.1 的 10/10 结果是历史记录，未覆盖其后用户发现的实体墙体堵路问题。
 
@@ -19,7 +25,7 @@ v1.0.2 的 EditMode 9/9、PlayMode 13/13 是历史结果。十关实体主路线
 
 `GameFlowTests` 验证：
 
-- 主场景能够初始化到选武器阶段。
+- 主场景初始化到开始页；点击开始、选择可用关卡后进入选武器阶段。
 - 选择手枪后开始门打开。
 - 进入游戏和到达出口会产生正确阶段变化。
 - 能连续切换到第十关并生成安全灯。
@@ -38,9 +44,11 @@ PlayMode 为 `10/10 PASS`。
 
 ## Windows Player 烟测
 
-开发包支持命令行 `-fogboundSmoke`。测试会在真实 Player 中启动场景、选择武器、
-进入游戏、保存截图并退出。日志必须包含 `FOGBOUND_RUNTIME_SMOKE_PASS`，并且没有
-C# 异常。
+正式包支持命令行 `-fogboundSmoke`，单独使用会停在开始页。
+加 `-fogboundLevels` 查看选关；加 `-fogboundLoadout` 查看武器页；加 `-fogboundGameplay`
+才会选武器并进入游戏。`-fogboundFirstPerson -fogboundWalkRoute` 检查第一人称实体路线。
+`-fogboundScreenshot` 后接截图绝对路径。烟测使用独立进度键，不会修改正常玩家的通关记录。
+日志必须包含 `FOGBOUND_RUNTIME_SMOKE_PASS`，路线测试还需 `FOGBOUND_WALK_PASS`，并检查 C# 异常。
 
 `v1.0.1` 另外对选武器、第三人称、第一人称手枪和第一人称砍刀运行了真实
 Windows Development Player 可见窗口烟测，四组均有截图和 PASS 日志。

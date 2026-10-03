@@ -7,12 +7,17 @@ and survive long enough to find the exit.
 
 ## Core Loop
 
-1. Spawn in the staging area outside the maze.
-2. Choose the pistol or machete.
-3. Enter through the start gate.
-4. Navigate while managing health, enemies and environmental pressure.
-5. Reach the exit gate alive to unlock the next level.
-6. Retry or continue until all ten levels are cleared.
+1. Open the title screen and press START.
+2. Select an unlocked level from the ten-level campaign.
+3. Spawn outside that maze and choose the pistol or machete.
+4. Enter through the start gate and navigate while managing health and enemies.
+5. Reach the exit alive, save completion locally, and unlock the next level.
+6. Retry, replay a cleared level, return to level selection, or continue.
+
+Level 1 is initially unlocked. Completing level N unlocks N+1, up to level 10.
+Entering a level or dying never unlocks another. Progress persists locally;
+there is no account or cross-device cloud save. Prior genuine unlock progress
+is migrated, but the old selected-level preference is not proof of completion.
 
 ## Control Scheme
 

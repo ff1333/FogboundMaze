@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace FogboundMaze
 {
-    public sealed class GameHud : MonoBehaviour
+    public sealed partial class GameHud : MonoBehaviour
     {
         private static readonly Color Ink = new(0.92f, 0.95f, 0.91f);
         private static readonly Color Panel = new(0.035f, 0.055f, 0.06f, 0.97f);
@@ -34,6 +34,7 @@ namespace FogboundMaze
         private GameObject resultPanel;
         private GameObject pausePanel;
         private float crosshairFlash;
+        private GameObject mobileRoot;
 
         public int ExploredCells => miniMap?.VisitedCount ?? 0;
 
@@ -97,6 +98,9 @@ namespace FogboundMaze
 
         public void ShowWeaponSelection(int level)
         {
+            HideCampaignMenu();
+            transform.Find("Top Bar").gameObject.SetActive(true);
+            if (mobileRoot != null) mobileRoot.SetActive(false);
             selectionPanel.SetActive(true);
             miniMap.gameObject.SetActive(false);
             crosshair.SetActive(false);
@@ -108,6 +112,7 @@ namespace FogboundMaze
 
         public void HideWeaponSelection()
         {
+            if (mobileRoot != null) mobileRoot.SetActive(true);
             selectionPanel.SetActive(false);
             miniMap.gameObject.SetActive(true);
             crosshair.SetActive(true);
@@ -128,6 +133,7 @@ namespace FogboundMaze
 
         public void ShowResult(bool won, int level, float elapsed, int kills)
         {
+            if (mobileRoot != null) mobileRoot.SetActive(false);
             resultPanel.SetActive(true);
             crosshair.SetActive(false);
             resultTitle.text = won ? (level == 10 ? "CAMPAIGN CLEARED" : "EXIT REACHED") : "RUN LOST";
@@ -139,6 +145,7 @@ namespace FogboundMaze
 
         public void SetPause(bool paused)
         {
+            if (mobileRoot != null) mobileRoot.SetActive(!paused);
             pausePanel.SetActive(paused);
             crosshair.SetActive(!paused);
         }
@@ -168,9 +175,13 @@ namespace FogboundMaze
             BuildSelection();
             BuildResult();
             BuildPause();
+            BuildCampaignPanels();
             if (Application.isMobilePlatform)
             {
-                MobileHudBuilder.Build(transform, input, font);
+                mobileRoot = new GameObject("Mobile Controls", typeof(RectTransform));
+                mobileRoot.transform.SetParent(transform, false);
+                SetRect(mobileRoot.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
+                MobileHudBuilder.Build(mobileRoot.transform, input, font);
             }
         }
 
@@ -243,7 +254,7 @@ namespace FogboundMaze
             var rect = selectionPanel.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(820f, 480f);
+            rect.sizeDelta = new Vector2(820f, 540f);
             var title = Label("Title", selectionPanel.transform, "CHOOSE YOUR LOADOUT", 42, TextAnchor.MiddleCenter);
             SetRect(title.rectTransform, new Vector2(0f, 0.72f), Vector2.one);
             var subtitle = Label("Subtitle", selectionPanel.transform, "ONE WEAPON. ONE EXIT.", 20, TextAnchor.MiddleCenter, new Color(0.62f, 0.7f, 0.69f));
@@ -258,7 +269,10 @@ namespace FogboundMaze
                 ? "LEFT STICK MOVE  |  SWIPE LOOK  |  FIRE ATTACK\nRUN SPRINT  |  R RELOAD  |  VIEW CAMERA"
                 : "WASD MOVE  |  MOUSE AIM  |  LEFT CLICK ATTACK\nSHIFT SPRINT  |  R RELOAD  |  V CAMERA  |  ESC RELEASE MOUSE";
             var help = Label("Controls", selectionPanel.transform, controls, 22, TextAnchor.MiddleCenter);
-            SetRect(help.rectTransform, new Vector2(0.04f, 0.025f), new Vector2(0.96f, 0.2f));
+            SetRect(help.rectTransform, new Vector2(0.04f, 0.10f), new Vector2(0.96f, 0.23f));
+            var back = Button("Back To Levels", selectionPanel.transform, "BACK TO LEVELS", new Color(0.16f, 0.22f, 0.23f));
+            SetRect(back.GetComponent<RectTransform>(), new Vector2(0.28f, 0.02f), new Vector2(0.72f, 0.09f));
+            back.onClick.AddListener(() => GameDirector.Instance.ShowLevelSelection());
         }
 
         private void BuildResult()
@@ -267,17 +281,20 @@ namespace FogboundMaze
             AddFrame(resultPanel);
             var rect = resultPanel.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(650f, 340f);
+            rect.sizeDelta = new Vector2(650f, 400f);
             resultTitle = Label("Result Title", resultPanel.transform, "EXIT REACHED", 48, TextAnchor.MiddleCenter);
             SetRect(resultTitle.rectTransform, new Vector2(0f, 0.62f), Vector2.one);
             resultStats = Label("Result Stats", resultPanel.transform, string.Empty, 24, TextAnchor.MiddleCenter);
             SetRect(resultStats.rectTransform, new Vector2(0.05f, 0.43f), new Vector2(0.95f, 0.64f));
             var retry = Button("Retry", resultPanel.transform, "RETRY", new Color(0.24f, 0.29f, 0.3f));
-            SetRect(retry.GetComponent<RectTransform>(), new Vector2(0.08f, 0.12f), new Vector2(0.48f, 0.36f));
+            SetRect(retry.GetComponent<RectTransform>(), new Vector2(0.08f, 0.24f), new Vector2(0.48f, 0.40f));
             retry.onClick.AddListener(() => GameDirector.Instance.Retry());
             var next = Button("Next", resultPanel.transform, "NEXT", Accent);
-            SetRect(next.GetComponent<RectTransform>(), new Vector2(0.52f, 0.12f), new Vector2(0.92f, 0.36f));
+            SetRect(next.GetComponent<RectTransform>(), new Vector2(0.52f, 0.24f), new Vector2(0.92f, 0.40f));
             next.onClick.AddListener(() => GameDirector.Instance.NextLevel());
+            var levels = Button("Levels", resultPanel.transform, "LEVEL SELECT", new Color(0.16f, 0.22f, 0.23f));
+            SetRect(levels.GetComponent<RectTransform>(), new Vector2(0.08f, 0.06f), new Vector2(0.92f, 0.20f));
+            levels.onClick.AddListener(() => GameDirector.Instance.ShowLevelSelection());
             resultPanel.SetActive(false);
         }
 
@@ -287,19 +304,22 @@ namespace FogboundMaze
             AddFrame(pausePanel);
             var rect = pausePanel.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(500f, 360f);
+            rect.sizeDelta = new Vector2(500f, 460f);
             var title = Label("Title", pausePanel.transform, "PAUSED", 46, TextAnchor.MiddleCenter);
-            SetRect(title.rectTransform, new Vector2(0f, 0.72f), Vector2.one);
+            SetRect(title.rectTransform, new Vector2(0f, 0.79f), Vector2.one);
             var resume = Button("Resume", pausePanel.transform, "RESUME", Accent);
-            SetRect(resume.GetComponent<RectTransform>(), new Vector2(0.14f, 0.53f), new Vector2(0.86f, 0.7f));
+            SetRect(resume.GetComponent<RectTransform>(), new Vector2(0.14f, 0.61f), new Vector2(0.86f, 0.76f));
             resume.onClick.AddListener(() => GameDirector.Instance.SetPaused(false));
             var loadout = Button("Loadout", pausePanel.transform, "BACK TO LOADOUT", new Color(0.22f, 0.34f, 0.34f));
-            SetRect(loadout.GetComponent<RectTransform>(), new Vector2(0.14f, 0.31f), new Vector2(0.86f, 0.48f));
+            SetRect(loadout.GetComponent<RectTransform>(), new Vector2(0.14f, 0.43f), new Vector2(0.86f, 0.58f));
             loadout.onClick.AddListener(() => GameDirector.Instance.ReturnToLoadout());
+            var levels = Button("Levels", pausePanel.transform, "LEVEL SELECT", new Color(0.16f, 0.22f, 0.23f));
+            SetRect(levels.GetComponent<RectTransform>(), new Vector2(0.14f, 0.25f), new Vector2(0.86f, 0.40f));
+            levels.onClick.AddListener(() => GameDirector.Instance.ShowLevelSelection());
             if (Application.platform != RuntimePlatform.WebGLPlayer)
             {
                 var quit = Button("Quit", pausePanel.transform, "QUIT GAME", new Color(0.38f, 0.2f, 0.18f));
-                SetRect(quit.GetComponent<RectTransform>(), new Vector2(0.14f, 0.09f), new Vector2(0.86f, 0.26f));
+                SetRect(quit.GetComponent<RectTransform>(), new Vector2(0.14f, 0.07f), new Vector2(0.86f, 0.22f));
                 quit.onClick.AddListener(() => GameDirector.Instance.QuitGame());
             }
             pausePanel.SetActive(false);
@@ -325,6 +345,7 @@ namespace FogboundMaze
         {
             var root = PanelObject(name, parent, color);
             var button = root.AddComponent<Button>();
+            button.targetGraphic = root.GetComponent<Image>();
             var colors = button.colors;
             colors.highlightedColor = Color.Lerp(color, Color.white, 0.18f);
             colors.pressedColor = Color.Lerp(color, Color.black, 0.22f);

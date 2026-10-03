@@ -8,6 +8,7 @@ namespace FogboundMaze.Tests
 {
     public sealed class GameFlowTests
     {
+        private readonly System.Collections.Generic.Dictionary<string, int?> savedProgress = new();
         [UnityTest]
         public IEnumerator HealthBar_TracksDamageHealingAndRetryInRenderedWidth()
         {
@@ -181,11 +182,31 @@ namespace FogboundMaze.Tests
         [UnitySetUp]
         public IEnumerator LoadMainScene()
         {
+            foreach (var key in new[] { CampaignProgress.CompletionKey, "Fogbound.SelectedLevel", "Fogbound.UnlockedLevel" })
+            {
+                savedProgress[key] = PlayerPrefs.HasKey(key) ? PlayerPrefs.GetInt(key) : null;
+                PlayerPrefs.DeleteKey(key);
+            }
             PlayerPrefs.DeleteKey("Fogbound.SelectedLevel");
             PlayerPrefs.DeleteKey("Fogbound.UnlockedLevel");
             SceneManager.LoadScene("Main");
             yield return null;
             yield return null;
+            GameDirector.Instance.ShowLevelSelection();
+            Assert.That(GameDirector.Instance.SelectLevel(1), Is.True);
+            yield return null;
+        }
+
+        [TearDown]
+        public void RestoreProgress()
+        {
+            foreach (var pair in savedProgress)
+            {
+                if (pair.Value.HasValue) PlayerPrefs.SetInt(pair.Key, pair.Value.Value);
+                else PlayerPrefs.DeleteKey(pair.Key);
+            }
+            PlayerPrefs.Save();
+            Time.timeScale = 1f;
         }
 
         [UnityTest]
@@ -328,6 +349,9 @@ namespace FogboundMaze.Tests
             var director = GameDirector.Instance;
             for (var level = 2; level <= 7; level++)
             {
+                director.SelectWeapon(WeaponType.Pistol);
+                director.BeginRun();
+                director.CompleteLevel();
                 director.NextLevel();
                 yield return null;
             }
@@ -383,6 +407,9 @@ namespace FogboundMaze.Tests
             var director = GameDirector.Instance;
             for (var level = 2; level <= 10; level++)
             {
+                director.SelectWeapon(WeaponType.Pistol);
+                director.BeginRun();
+                director.CompleteLevel();
                 director.NextLevel();
                 yield return null;
             }
@@ -393,6 +420,12 @@ namespace FogboundMaze.Tests
             Assert.That(director.CurrentLevel.miasma, Is.True);
             Assert.That(director.World.SafeLights, Is.Not.Empty);
             Assert.That(director.EnemyPoolCapacity, Is.GreaterThanOrEqualTo(14));
+            director.SelectWeapon(WeaponType.Pistol);
+            director.BeginRun();
+            director.CompleteLevel();
+            Assert.That(director.Progress.CompletedCount, Is.EqualTo(10));
+            director.NextLevel();
+            Assert.That(director.Phase, Is.EqualTo(GamePhase.Won));
         }
     }
 }

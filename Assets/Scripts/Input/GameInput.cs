@@ -44,6 +44,11 @@ namespace FogboundMaze
         }
 
         public void SetMobileMove(Vector2 value) => mobileMove = Vector2.ClampMagnitude(value, 1f);
+        public void ResetMobile()
+        {
+            mobileMove = mobileLook = Vector2.zero;
+            mobileAttack = mobileSprint = mobileReload = mobileToggle = mobilePause = false;
+        }
         public void AddMobileLook(Vector2 value) => mobileLook += value;
         public void SetMobileAttack(bool value) => mobileAttack = value;
         public void SetMobileSprint(bool value) => mobileSprint = value;
@@ -66,4 +71,3 @@ namespace FogboundMaze
         }
     }
 }
-

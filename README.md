@@ -1,12 +1,15 @@
 # Fogbound Maze
 
 Fogbound Maze is a Unity 6 third-person and first-person survival maze game.
-The player chooses a pistol or machete outside a procedurally generated maze,
+The player starts at the title screen, selects an unlocked level, then chooses
+a pistol or machete outside a procedurally generated maze,
 enters through the start gate, survives zombie attacks, and reaches the exit.
 
 ## Portfolio Scope
 
 - Ten deterministic, progressively harder maze levels
+- Title screen, ten-level selection and locally saved sequential completion
+- Animated survivor and two zombie models from the Quaternius CC0 kit
 - Runtime maze generation with guaranteed start-to-exit connectivity
 - Branch-rich Growing Tree mazes with early route choices
 - Fog-of-war mini-map showing visited cells and unexplored exit mouths without revealing the solution
@@ -29,22 +32,23 @@ under `docs/`.
 
 ## Screenshots
 
-![Health bar and unexplored branch markers](docs/images/v1.0.3-HealthCheck.png)
+![Title screen](docs/images/v1.1.0-title.png)
 
-![Weapon selection](docs/images/v1.0.1-selection.png)
+![Sequential level selection](docs/images/v1.1.0-levels.png)
 
-![Pause and exit menu](docs/images/v1.0.1-pause.png)
+![Survivor and zombies](docs/images/v1.1.0-actors.png)
 
 ## Release Status
 
-- Local version: `v1.0.3` health HUD and maze branching fix
+- Local version: `v1.1.0` campaign menus and animated character art
 - EditMode tests: `10/10 PASS`
-- PlayMode tests: `16/16 PASS`, including physical routes and every open corridor in all ten levels
-- Windows Release Player: continuous six-cell walks, 35% health and fatal-hit HUD checks `PASS`
-- Windows/WebGL/Android builds: `0 errors / 0 warnings`
+- PlayMode tests: `21/21 PASS`, including menu flow, saved unlocks, animation and physical corridors
+- Windows Release Player: title, levels, loadout, actors, small level menu and first-person six-cell walks `PASS`
+- Windows/WebGL/Android BuildReport: `0 errors / 0 warnings`
 - All three packages generated and SHA-256 verified; WebGL interaction and Android device acceptance remain `PENDING`
-- Release attachment directory: `Builds/Packages/v1.0.3/` (ignored by Git)
+- Release attachment directory: `Builds/Packages/v1.1.0/` (ignored by Git)
 - Start here: [`docs/README.md`](docs/README.md)
 - Playtest bug-fix log: [`docs/devlogs/04-first-playtest-bugfix.md`](docs/devlogs/04-first-playtest-bugfix.md)
-- Current regression log: [`docs/devlogs/06-health-hud-and-branching.md`](docs/devlogs/06-health-hud-and-branching.md)
-- Current retest and release steps: [`docs/08_V1_0_3_HUD_AND_BRANCHES.md`](docs/08_V1_0_3_HUD_AND_BRANCHES.md)
+- Current development log: [`docs/devlogs/07-campaign-menu-and-character-art.md`](docs/devlogs/07-campaign-menu-and-character-art.md)
+- Current illustrated guide: [`docs/09_V1_1_0_MENU_AND_CHARACTERS.md`](docs/09_V1_1_0_MENU_AND_CHARACTERS.md)
+- Art license and attribution: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)

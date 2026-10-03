@@ -6,7 +6,6 @@ namespace FogboundMaze
     public sealed class EnemyPool : MonoBehaviour
     {
         private readonly List<EnemyAgent> enemies = new();
-        private Material zombieMaterial;
 
         public int ActiveCount
         {
@@ -45,7 +44,6 @@ namespace FogboundMaze
 
         private EnemyAgent CreateEnemy()
         {
-            zombieMaterial ??= RuntimeArt.MaterialFromResource("FogboundZombie", new Color(0.22f, 0.55f, 0.31f));
             var root = new GameObject($"Zombie {enemies.Count + 1}");
             root.transform.SetParent(transform);
             var controller = root.AddComponent<CharacterController>();
@@ -54,18 +52,11 @@ namespace FogboundMaze
             controller.center = Vector3.up * 0.95f;
             root.AddComponent<Health>();
             var agent = root.AddComponent<EnemyAgent>();
-            var body = RuntimeArt.Primitive(PrimitiveType.Capsule, "Body", root.transform,
-                Vector3.up, new Vector3(0.72f, 0.82f, 0.55f), zombieMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Sphere, "Head", body.transform,
-                new Vector3(0f, 0.92f, 0f), new Vector3(0.65f, 0.55f, 0.62f), zombieMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Cube, "Arm L", body.transform,
-                new Vector3(-0.55f, 0.18f, 0.28f), new Vector3(0.18f, 0.18f, 0.85f), zombieMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Cube, "Arm R", body.transform,
-                new Vector3(0.55f, 0.18f, 0.28f), new Vector3(0.18f, 0.18f, 0.85f), zombieMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Capsule, "Leg L", root.transform,
-                new Vector3(-0.2f, 0.42f, 0f), new Vector3(0.25f, 0.42f, 0.25f), zombieMaterial, false);
-            RuntimeArt.Primitive(PrimitiveType.Capsule, "Leg R", root.transform,
-                new Vector3(0.2f, 0.42f, 0f), new Vector3(0.25f, 0.42f, 0.25f), zombieMaterial, false);
+            var normal = Instantiate(Resources.Load<GameObject>("Characters/Zombie"), root.transform);
+            normal.name = "Normal Visual";
+            var elite = Instantiate(Resources.Load<GameObject>("Characters/EliteZombie"), root.transform);
+            elite.name = "Elite Visual";
+            elite.SetActive(false);
             root.SetActive(false);
             enemies.Add(agent);
             return agent;

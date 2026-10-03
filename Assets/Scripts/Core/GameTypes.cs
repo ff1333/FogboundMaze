@@ -9,6 +9,8 @@ namespace FogboundMaze
 
     public enum GamePhase
     {
+        Title,
+        LevelSelect,
         Staging,
         Playing,
         Paused,
@@ -25,4 +27,3 @@ namespace FogboundMaze
         Dead
     }
 }
-

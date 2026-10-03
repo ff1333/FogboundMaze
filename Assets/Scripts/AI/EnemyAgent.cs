@@ -18,12 +18,15 @@ namespace FogboundMaze
         private float speed;
         private float damage;
         private bool elite;
+        private Animation animationPlayer;
+        private MaterialPropertyBlock flashProperties;
 
         public EnemyState State { get; private set; } = EnemyState.Inactive;
         public bool IsActive => gameObject.activeSelf && State != EnemyState.Dead;
 
         private void Awake()
         {
+            flashProperties = new MaterialPropertyBlock();
             controller = GetComponent<CharacterController>();
             health = GetComponent<Health>();
             health.Died += OnDied;
@@ -31,18 +34,28 @@ namespace FogboundMaze
 
         public void Spawn(PlayerController target, MazeWorld mazeWorld, Vector3 position, bool isElite)
         {
+            StopAllCoroutines();
             player = target;
             world = mazeWorld;
             elite = isElite;
             speed = elite ? 3.35f : 2.65f;
             damage = elite ? 22f : 13f;
-            transform.position = position + Vector3.up * 0.05f;
+            controller.enabled = false;
+            transform.SetPositionAndRotation(position + Vector3.up * 0.05f, Quaternion.identity);
             transform.localScale = elite ? Vector3.one * 1.2f : Vector3.one;
+            controller.enabled = true;
             health.ResetHealth(elite ? 125f : 68f);
             gameObject.SetActive(true);
             State = EnemyState.Wander;
             nextPathTime = 0f;
-            Tint(elite ? new Color(0.48f, 0.18f, 0.55f) : new Color(0.22f, 0.55f, 0.31f));
+            nextAttack = 0f;
+            var normal = transform.Find("Normal Visual");
+            var heavy = transform.Find("Elite Visual");
+            if (normal != null) normal.gameObject.SetActive(!elite);
+            if (heavy != null) heavy.gameObject.SetActive(elite);
+            animationPlayer = GetComponentInChildren<Animation>();
+            SetFlash(false);
+            Play("Idle");
         }
 
         private void Update()
@@ -57,6 +70,7 @@ namespace FogboundMaze
                 if (Time.time >= nextAttack)
                 {
                     nextAttack = Time.time + (elite ? 0.78f : 1.05f);
+                    Play("Idle_Attack", true);
                     player.Health.Damage(damage);
                 }
                 return;
@@ -99,43 +113,48 @@ namespace FogboundMaze
         private void OnDied(Health value)
         {
             State = EnemyState.Dead;
+            controller.enabled = false;
+            Play("Death", true);
             GameDirector.Instance?.RegisterKill(elite);
             StartCoroutine(ReturnAfterDeath());
         }
 
         private IEnumerator ReturnAfterDeath()
         {
-            var elapsed = 0f;
-            while (elapsed < 0.65f)
-            {
-                elapsed += Time.deltaTime;
-                transform.Rotate(Vector3.forward, 160f * Time.deltaTime);
-                yield return null;
-            }
+            yield return new WaitForSeconds(1.1f);
             State = EnemyState.Inactive;
             gameObject.SetActive(false);
         }
 
         private IEnumerator HitFlash()
         {
-            Tint(Color.white);
+            SetFlash(true);
             yield return new WaitForSeconds(0.08f);
-            Tint(elite ? new Color(0.48f, 0.18f, 0.55f) : new Color(0.22f, 0.55f, 0.31f));
+            SetFlash(false);
         }
 
         private void AnimateWalk()
         {
-            var sway = Mathf.Sin(Time.time * 9f) * 7f;
-            var body = transform.Find("Body");
-            if (body != null) body.localRotation = Quaternion.Euler(0f, 0f, sway);
+            Play(State == EnemyState.Chase ? "Run" : "Walk");
         }
 
-        private void Tint(Color color)
+        private void Play(string clip, bool restart = false)
         {
-            foreach (var renderer in GetComponentsInChildren<Renderer>())
+            if (animationPlayer == null || animationPlayer[clip] == null) return;
+            if (restart) animationPlayer.Stop();
+            if (!animationPlayer.IsPlaying(clip)) animationPlayer.CrossFade(clip, 0.08f);
+        }
+
+        private void SetFlash(bool enabled)
+        {
+            flashProperties.Clear();
+            if (enabled)
             {
-                renderer.material.color = color;
+                flashProperties.SetColor("_BaseColor", new Color(1.7f, 1.7f, 1.7f));
+                flashProperties.SetColor("_Color", new Color(1.7f, 1.7f, 1.7f));
             }
+            foreach (var renderer in GetComponentsInChildren<Renderer>(true))
+                renderer.SetPropertyBlock(flashProperties);
         }
     }
 }

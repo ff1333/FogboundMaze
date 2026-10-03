@@ -7,8 +7,9 @@
 1. 创建输入、迷宫、敌人池和环境控制器。
 2. 创建玩家、双视角相机和武器控制器。
 3. 创建 HUD 与移动端触控层。
-4. 读取存档并加载对应关卡。
-5. 生成迷宫、预热对象池，进入选武器阶段。
+4. 读取 `CampaignProgress`，用第一关作为开始页的场景背景，进入 `Title`。
+5. 点击 START 进入 `LevelSelect`，只有已解锁关卡允许进入。
+6. 选择关卡后生成该关迷宫、预热对象池，进入选武器阶段 `Staging`。
 
 运行时生成使十关共享同一份代码和场景，关卡差异集中在
 `LevelDefinition`，避免复制场景后参数逐渐失控。
@@ -18,6 +19,9 @@
 | 模块 | 关键脚本 | 职责 |
 | --- | --- | --- |
 | 流程 | `GameDirector` | 阶段、关卡、存档、生成、胜负 |
+| 进度 | `CampaignProgress` | 通关位标记、顺序解锁、旧存档迁移 |
+| 模型导入 | `FogboundCharacterBuilder` | 配置 FBX 动画、贴图及可复用预制体 |
+| 角色动画 | `PlayerVisual`、`EnemyAgent` | 播放待机、移动、攻击和死亡片段 |
 | 迷宫 | `MazeGenerator` | 固定种子的 Growing Tree 混合生长与候选筛选 |
 | 难度 | `MazeComplexity` | 路线、转弯、死路、全图路口及主路线选择间距 |
 | 寻路 | `MazePathfinder` | 网格 A* 与路径重建 |
@@ -29,7 +33,7 @@
 | 性能 | `EnemyPool` | 按关卡上限预热并复用敌人 |
 | 环境 | `EnvironmentController` | 雾、光照与昼夜循环 |
 | 输入 | `GameInput` | Input System 与触控输入统一 |
-| UI | `GameHud` | HUD、武器选择、暂停与结算 |
+| UI | `GameHud`、`GameHud.Campaign` | 开始页、选关、HUD、武器选择、暂停与结算 |
 | 探索地图 | `MazeExploration`、`MiniMapHud` | 记录已走格子，以小纹理显示路径、朝向和未探索岔路口 |
 
 ## 为什么不用 NavMesh
@@ -46,6 +50,23 @@
 水平朝向计算，因此切换视角不会改变操作语义。
 
 ## 数据流
+
+选关入口在按钮和 `GameDirector.SelectLevel` 两层检查解锁状态，不能只靠灰色按钮。
+只有 `Win()` 才调用 `CampaignProgress.Complete()` 写入 PlayerPrefs 并 Save。
+保存值是十关完成位标记，只接受从第一关开始的连续完成记录。旧版真正的解锁值可迁移，
+但 `Fogbound.SelectedLevel` 不作为通关证明。PlayerPrefs 是本地便捷存档，不提供防篡改或云同步。
+返回菜单时清理敌人、触控残留、装备和暂停状态；生成代数阻止旧关卡预警回调在新关刷怪。
+
+## 角色与动画
+
+使用 Quaternius CC0 模型、贴图和作者提供的动画。`FogboundCharacterBuilder` 生成
+Resources 内的角色及武器预制体，实际版本使用 Legacy `Animation.CrossFade` 播放片段，
+没有使用 Animator 状态机或根运动。移动仍由 CharacterController 控制。
+普通/精英外观随对象池一起预热，复用时重置碰撞体、攻击计时、生命、外观与动画。
+受击闪白用 MaterialPropertyBlock，结束时清空覆盖值，恢复原贴图颜色。
+不能把第三方建模或动画创作写成自己的工作；本项目工作是导入、绑定、运行时切换和复用集成。
+
+## 游戏内数据流
 
 输入 -> 玩家/相机 -> 武器命中或移动 -> Health/AI -> GameDirector -> HUD。
 

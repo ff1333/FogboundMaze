@@ -18,7 +18,31 @@ namespace FogboundMaze
             var walkRoute = System.Array.Exists(arguments, value => value == "-fogboundWalkRoute");
             var healthCheck = System.Array.Exists(arguments, value => value == "-fogboundHealthCheck");
             var fatalHit = System.Array.Exists(arguments, value => value == "-fogboundFatalHit");
+            var levels = System.Array.Exists(arguments, value => value == "-fogboundLevels");
+            var loadout = System.Array.Exists(arguments, value => value == "-fogboundLoadout");
+            var actors = System.Array.Exists(arguments, value => value == "-fogboundActors");
             yield return new WaitForSecondsRealtime(1f);
+
+            if (levels || loadout || pause || gameplay || actors)
+            {
+                GameDirector.Instance.ShowLevelSelection();
+                if (!levels) GameDirector.Instance.SelectLevel(1);
+                yield return null;
+            }
+
+            if (actors)
+            {
+                var director = GameDirector.Instance;
+                director.SelectWeapon(machete ? WeaponType.Machete : WeaponType.Pistol);
+                var pool = FindFirstObjectByType<EnemyPool>();
+                foreach (var elite in new[] { false, true })
+                {
+                    var enemy = pool.Spawn(director.Player, director.World,
+                        director.World.EntryPosition + new Vector3(elite ? 1.1f : -1.1f, 0f, elite ? 0.8f : 0f), elite);
+                    enemy.transform.LookAt(director.Player.transform.position);
+                }
+                yield return new WaitForSecondsRealtime(0.5f);
+            }
 
             if (pause)
             {

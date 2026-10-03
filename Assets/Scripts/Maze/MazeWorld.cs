@@ -139,6 +139,7 @@ namespace FogboundMaze
             StartGate = RuntimeArt.Primitive(PrimitiveType.Cube, "Start Gate", generatedRoot,
                 start + Vector3.back * CellSize * 0.5f + Vector3.up * WallHeight * 0.5f,
                 new Vector3(CellSize, WallHeight, WallThickness * 1.4f), trimMaterial);
+            StartGate.GetComponent<Renderer>().enabled = false;
 
             var frameColor = RuntimeArt.Material("Entry Frame", new Color(0.12f, 0.86f, 0.57f), 0.2f, 0.55f);
             RuntimeArt.Primitive(PrimitiveType.Cube, "Entry Left", generatedRoot,
