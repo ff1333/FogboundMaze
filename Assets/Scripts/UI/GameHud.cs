@@ -35,6 +35,11 @@ namespace FogboundMaze
         private GameObject pausePanel;
         private float crosshairFlash;
         private GameObject mobileRoot;
+        private float shotPulse;
+        private float lastHealth = -1f;
+        private float damagePulse;
+        private readonly List<Image> damageEdges = new();
+        private Text hitMarker;
 
         public int ExploredCells => miniMap?.VisitedCount ?? 0;
 
@@ -49,6 +54,11 @@ namespace FogboundMaze
 
         private void Update()
         {
+            shotPulse = Mathf.Max(0f, shotPulse - Time.unscaledDeltaTime * 5f);
+            crosshair.transform.localScale = Vector3.one * (1f + shotPulse * .35f);
+            hitMarker.gameObject.SetActive(crosshair.activeSelf && crosshairFlash > 0f);
+            damagePulse = Mathf.Max(0f, damagePulse - Time.unscaledDeltaTime * 2f);
+            foreach (var edge in damageEdges) edge.color = new Color(.95f,.15f,.24f,damagePulse * .30f);
             if (crosshairFlash > 0f)
             {
                 crosshairFlash -= Time.unscaledDeltaTime;
@@ -65,7 +75,7 @@ namespace FogboundMaze
             killsText.text = $"KILLS  {director.Kills:000}";
             weaponText.text = player.Weapon.Type switch
             {
-                WeaponType.Pistol => $"PISTOL  {(player.Weapon.IsReloading ? "RELOAD" : player.Weapon.Ammunition.ToString("00"))}",
+                WeaponType.Pistol => player.Weapon.IsReloading ? $"RELOAD  {player.Weapon.ReloadProgress:P0}" : $"PISTOL  {player.Weapon.Ammunition:00} / 10",
                 WeaponType.Machete => "MACHETE",
                 _ => "UNARMED"
             };
@@ -85,6 +95,8 @@ namespace FogboundMaze
 
         private void RefreshHealth(Health health)
         {
+            if (lastHealth >= 0 && health.Current < lastHealth) damagePulse = 1f;
+            lastHealth = health.Current;
             healthText.text = $"HP  {Mathf.CeilToInt(health.Current)} / {Mathf.CeilToInt(health.Maximum)}";
             var ratio = health.Maximum > 0f ? Mathf.Clamp01(health.Current / health.Maximum) : 0f;
             // This solid-color Image has no sprite, so size its rect instead of using Filled.
@@ -108,6 +120,7 @@ namespace FogboundMaze
             resultPanel.SetActive(false);
             pausePanel.SetActive(false);
             levelText.text = $"LEVEL  {level:00}";
+            selectionPanel.transform.Find("Subtitle").GetComponent<Text>().text = LevelBrief(level).Split('\n')[0];
         }
 
         public void HideWeaponSelection()
@@ -152,8 +165,9 @@ namespace FogboundMaze
 
         public void FlashCrosshair()
         {
-            crosshairFlash = 0.08f;
+            crosshairFlash = 0.18f;
         }
+        public void PulseShot() => shotPulse = 1f;
 
         private void Build()
         {
@@ -171,6 +185,7 @@ namespace FogboundMaze
             BuildTopBar();
             miniMap = MiniMapHud.Create(transform, font);
             BuildCrosshair();
+            BuildDamageFeedback();
             BuildEntryPrompt();
             BuildSelection();
             BuildResult();
@@ -224,6 +239,26 @@ namespace FogboundMaze
             CrosshairPart(root.transform, "Left", new Vector2(-15f, 0f), new Vector2(11f, 3f));
             CrosshairPart(root.transform, "Right", new Vector2(15f, 0f), new Vector2(11f, 3f));
             crosshair.SetActive(false);
+            hitMarker = Label("Hit Marker", transform, "X", 30, TextAnchor.MiddleCenter, new Color(1f,.83f,.36f));
+            hitMarker.raycastTarget = false;
+            hitMarker.rectTransform.anchorMin = hitMarker.rectTransform.anchorMax = Vector2.one * .5f;
+            hitMarker.rectTransform.sizeDelta = new Vector2(55,55);
+            hitMarker.gameObject.SetActive(false);
+        }
+
+        private void BuildDamageFeedback()
+        {
+            var bounds = new[] {
+                new Vector4(0,0,.012f,1), new Vector4(.988f,0,1,1),
+                new Vector4(0,0,1,.018f), new Vector4(0,.982f,1,1)
+            };
+            foreach (var bound in bounds)
+            {
+                var edge = PanelObject("Damage Edge",transform,Color.clear).GetComponent<Image>();
+                edge.raycastTarget = false;
+                SetRect(edge.rectTransform,new Vector2(bound.x,bound.y),new Vector2(bound.z,bound.w));
+                damageEdges.Add(edge);
+            }
         }
 
         private void CrosshairPart(Transform parent, string name, Vector2 position, Vector2 size)
@@ -252,12 +287,10 @@ namespace FogboundMaze
             selectionPanel = PanelObject("Weapon Selection", transform, Panel);
             AddFrame(selectionPanel);
             var rect = selectionPanel.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(820f, 540f);
+            SetRect(rect,new Vector2(.20f,.19f),new Vector2(.80f,.81f));
             var title = Label("Title", selectionPanel.transform, "CHOOSE YOUR LOADOUT", 42, TextAnchor.MiddleCenter);
             SetRect(title.rectTransform, new Vector2(0f, 0.72f), Vector2.one);
-            var subtitle = Label("Subtitle", selectionPanel.transform, "ONE WEAPON. ONE EXIT.", 20, TextAnchor.MiddleCenter, new Color(0.62f, 0.7f, 0.69f));
+            var subtitle = Label("Subtitle", selectionPanel.transform, "ONE WEAPON. ONE EXIT.", 23, TextAnchor.MiddleCenter, new Color(0.80f, 0.87f, 0.86f));
             SetRect(subtitle.rectTransform, new Vector2(0f, 0.61f), new Vector2(1f, 0.76f));
             var pistol = Button("Pistol", selectionPanel.transform, "PISTOL\n10 rounds  |  28m", new Color(0.12f, 0.42f, 0.55f));
             SetRect(pistol.GetComponent<RectTransform>(), new Vector2(0.08f, 0.23f), new Vector2(0.48f, 0.58f));
@@ -265,6 +298,8 @@ namespace FogboundMaze
             var machete = Button("Machete", selectionPanel.transform, "MACHETE\nhigh damage  |  close", new Color(0.55f, 0.25f, 0.12f));
             SetRect(machete.GetComponent<RectTransform>(), new Vector2(0.52f, 0.23f), new Vector2(0.92f, 0.58f));
             machete.onClick.AddListener(() => GameDirector.Instance.SelectWeapon(WeaponType.Machete));
+            AddWeaponPreview(pistol, "PistolPreview");
+            AddWeaponPreview(machete, "KnifePreview");
             var controls = Application.isMobilePlatform
                 ? "LEFT STICK MOVE  |  SWIPE LOOK  |  FIRE ATTACK\nRUN SPRINT  |  R RELOAD  |  VIEW CAMERA"
                 : "WASD MOVE  |  MOUSE AIM  |  LEFT CLICK ATTACK\nSHIFT SPRINT  |  R RELOAD  |  V CAMERA  |  ESC RELEASE MOUSE";
@@ -335,10 +370,23 @@ namespace FogboundMaze
             text.fontSize = size;
             text.alignment = alignment;
             text.color = color ?? Ink;
+            text.raycastTarget = false;
             text.resizeTextForBestFit = true;
             text.resizeTextMinSize = 14;
             text.resizeTextMaxSize = size;
             return text;
+        }
+
+        private void AddWeaponPreview(Button button, string resource)
+        {
+            var texture = Resources.Load<Texture2D>(resource);
+            if (texture == null) return;
+            var preview = new GameObject("Weapon Preview",typeof(RectTransform),typeof(RawImage)).GetComponent<RawImage>();
+            preview.transform.SetParent(button.transform,false);
+            preview.texture = texture;
+            preview.raycastTarget = false;
+            SetRect(preview.rectTransform,new Vector2(.22f,.36f),new Vector2(.78f,1f));
+            SetRect(button.transform.Find("Label").GetComponent<RectTransform>(),new Vector2(.03f,.02f),new Vector2(.97f,.40f));
         }
 
         private Button Button(string name, Transform parent, string label, Color color)
@@ -347,8 +395,9 @@ namespace FogboundMaze
             var button = root.AddComponent<Button>();
             button.targetGraphic = root.GetComponent<Image>();
             var colors = button.colors;
-            colors.highlightedColor = Color.Lerp(color, Color.white, 0.18f);
-            colors.pressedColor = Color.Lerp(color, Color.black, 0.22f);
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(1.2f,1.2f,1.2f);
+            colors.pressedColor = new Color(.75f,.75f,.75f);
             button.colors = colors;
             var text = Label("Label", root.transform, label, 27, TextAnchor.MiddleCenter);
             SetRect(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(16f, 8f), new Vector2(-16f, -8f));

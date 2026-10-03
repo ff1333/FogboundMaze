@@ -6,6 +6,10 @@ namespace FogboundMaze
     {
         private static AudioClip pistol;
         private static AudioClip machete;
+        private static AudioClip impact;
+        private static AudioClip reload;
+        public static AudioClip Impact => impact ??= Create("Hit Confirm", .075f, 240f, 900f, .65f, 103);
+        public static AudioClip Reload => reload ??= Create("Magazine", .13f, 110f, 1800f, .8f, 221);
 
         public static AudioClip Pistol => pistol ??= Create("Pistol", 0.11f, 125f, 730f, 0.36f, 37);
         public static AudioClip Machete => machete ??= Create("Machete", 0.18f, 90f, 230f, 0.24f, 91);

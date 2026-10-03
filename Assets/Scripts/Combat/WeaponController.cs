@@ -17,6 +17,8 @@ namespace FogboundMaze
         private bool reloading;
         private AudioSource audioSource;
         private bool swinging;
+        private float reloadProgress;
+        public float ReloadProgress => reloadProgress;
 
         public WeaponType Type => type;
         public int Ammunition => ammunition;
@@ -49,6 +51,7 @@ namespace FogboundMaze
         {
             StopAllCoroutines();
             reloading = false;
+            reloadProgress = 0f;
             swinging = false;
             nextAttack = 0f;
             type = weaponType;
@@ -149,7 +152,7 @@ namespace FogboundMaze
                     target = cameraHit.point;
                 }
                 var muzzle = (viewCamera.GetComponent<CameraRig>().IsFirstPerson ? viewMount : mount)
-                    .TransformPoint(new Vector3(0f, 0f, 0.58f));
+                    .TransformPoint(new Vector3(0f, 0.11f, 0.72f));
                 var end = target;
                 var hitEnemy = false;
                 var direction = target - muzzle;
@@ -163,13 +166,18 @@ namespace FogboundMaze
                         enemy.TakeDamage(34f);
                         hitEnemy = true;
                     }
-                    CombatEffects.Impact(hit.point, hit.normal);
+                    CombatEffects.Impact(hit.point, hit.normal, hitEnemy);
                 }
                 CombatEffects.Tracer(muzzle, end);
-                CombatEffects.Impact(muzzle, viewCamera.transform.forward);
+                CombatEffects.Muzzle(muzzle, viewCamera.transform);
+                GameDirector.Instance?.Hud?.PulseShot();
                 StartCoroutine(Recoil());
                 audioSource.PlayOneShot(ProceduralAudio.Pistol);
-                if (hitEnemy) GameDirector.Instance?.Hud?.FlashCrosshair();
+                if (hitEnemy)
+                {
+                    GameDirector.Instance?.Hud?.FlashCrosshair();
+                    audioSource.PlayOneShot(ProceduralAudio.Impact, .6f);
+                }
             }
             else
             {
@@ -180,6 +188,8 @@ namespace FogboundMaze
                 var forward = viewCamera.transform.forward;
                 forward.y = 0f;
                 forward.Normalize();
+                CombatEffects.Slash(transform.position + Vector3.up * 1.2f, forward);
+                GameDirector.Instance?.Hud?.PulseShot();
                 var center = transform.position + forward * 1.25f + Vector3.up;
                 foreach (var hit in Physics.OverlapSphere(center, 1.55f, ~0, QueryTriggerInteraction.Ignore))
                 {
@@ -194,7 +204,8 @@ namespace FogboundMaze
                         && obstruction.collider.GetComponentInParent<EnemyAgent>() == enemy)
                     {
                         enemy.TakeDamage(58f);
-                        CombatEffects.Impact(enemy.transform.position + Vector3.up, -forward);
+                        CombatEffects.Impact(enemy.transform.position + Vector3.up, -forward, true);
+                        audioSource.PlayOneShot(ProceduralAudio.Impact, .7f);
                         GameDirector.Instance?.Hud?.FlashCrosshair();
                     }
                 }
@@ -245,7 +256,21 @@ namespace FogboundMaze
         {
             if (reloading || type != WeaponType.Pistol) yield break;
             reloading = true;
-            yield return new WaitForSeconds(1.15f);
+            audioSource.PlayOneShot(ProceduralAudio.Reload, .7f);
+            for (var elapsed = 0f; elapsed < 1.15f; elapsed += Time.deltaTime)
+            {
+                reloadProgress = elapsed / 1.15f;
+                if (viewWeapon != null)
+                {
+                    var dip = Mathf.Sin(reloadProgress * Mathf.PI);
+                    viewWeapon.localPosition = new Vector3(0f,-.24f * dip,0f);
+                    viewWeapon.localRotation = Quaternion.Euler(20f * dip,0f,-30f * dip);
+                }
+                yield return null;
+            }
+            if (viewWeapon != null) { viewWeapon.localPosition = Vector3.zero; viewWeapon.localRotation = Quaternion.identity; }
+            reloadProgress = 1f;
+            audioSource.PlayOneShot(ProceduralAudio.Reload, .45f);
             ammunition = MagazineSize;
             reloading = false;
         }

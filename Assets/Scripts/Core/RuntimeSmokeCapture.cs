@@ -21,7 +21,15 @@ namespace FogboundMaze
             var levels = System.Array.Exists(arguments, value => value == "-fogboundLevels");
             var loadout = System.Array.Exists(arguments, value => value == "-fogboundLoadout");
             var actors = System.Array.Exists(arguments, value => value == "-fogboundActors");
+            var guide = System.Array.Exists(arguments, value => value == "-fogboundGuide");
+            var combat = System.Array.Exists(arguments, value => value == "-fogboundCombat");
             yield return new WaitForSecondsRealtime(1f);
+            if (guide)
+            {
+                GameDirector.Instance.ShowGuide();
+                GameDirector.Instance.Hud.transform.Find("Field Guide/Chapter 7")
+                    .GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            }
 
             if (levels || loadout || pause || gameplay || actors)
             {
@@ -129,6 +137,12 @@ namespace FogboundMaze
 
             if (!string.IsNullOrWhiteSpace(output))
             {
+                if (combat)
+                {
+                    GameDirector.Instance.Player.Weapon.Tick(true,true,false);
+                    Time.timeScale = 0f;
+                    yield return null;
+                }
                 Directory.CreateDirectory(Path.GetDirectoryName(output));
                 ScreenCapture.CaptureScreenshot(output, 1);
                 yield return new WaitForSecondsRealtime(1f);

@@ -1,0 +1,17 @@
+{
+  "game": "fogbound",
+  "errors": [],
+  "canvas": {
+    "x": 160,
+    "y": 79,
+    "width": 960,
+    "height": 600
+  },
+  "screenshots": [
+    "title",
+    "loadout",
+    "gameplay",
+    "pause"
+  ],
+  "note": "Automated Chromium interaction; screenshots require visual review. Not an Android device test."
+}

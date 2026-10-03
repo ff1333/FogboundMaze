@@ -10,6 +10,7 @@ namespace FogboundMaze
     public enum GamePhase
     {
         Title,
+        Guide,
         LevelSelect,
         Staging,
         Playing,
