@@ -1,0 +1,3 @@
+FOGBOUND_PLATFORM_BUILD target=StandaloneWindows64 result=Succeeded errors=0 warnings=0 size=96340910
+FOGBOUND_PLATFORM_BUILD target=WebGL result=Succeeded errors=0 warnings=0 size=12254191
+FOGBOUND_PLATFORM_BUILD target=Android result=Succeeded errors=0 warnings=9 size=454558165

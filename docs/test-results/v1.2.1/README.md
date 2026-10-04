@@ -15,8 +15,11 @@
 镜头看得到但枪口被挡也不穿墙；长刀前摇、3.2 米处命中、3.6 米处不命中；同敌人多个 Collider 只伤害一次；
 身后/墙后目标不受近战伤害；僵尸不能隔墙扣玩家血；右手握持；退出菜单或死亡取消挥砍前摇。
 
-Windows 和 WebGL 构建为零错误、零告警。Android 的结果和告警数量以最终摘要为准；
+三平台均构建成功。Windows 和 WebGL 为零错误、零告警；Android 为零错误、9 条告警：
+3 条 `Failed to download any source lists!`、6 条 `Still waiting for package manifests to be fetched remotely.`。
 SDK 远程清单下载/等待告警属于构建环境联网检查，不等于已完成手机渲染、触控或性能验收。
+通过 aapt 确认 APK versionName=1.2.1、versionCode=7、ARM64；Windows Player 包内版本也通过烟测校验。
+三个最终附件的 SHA256 均与清单匹配。BuildReport 中 size 是构建统计量，不等于压缩包的文件大小。
 
 安卓新版真机仍待作者实际安装检查，不沿用旧包的真机结论。没有把自动化测试写成作者本人手测。
 本次未宣称全部十关长时间平衡、所有手机或应用商店审核通过。
