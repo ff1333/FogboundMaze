@@ -13,7 +13,7 @@ namespace FogboundMaze.Tests
         public IEnumerator HealthBar_TracksDamageHealingAndRetryInRenderedWidth()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             director.Player.Health.Damage(65f);
             yield return null;
             AssertHealthDisplay(director, 35, 0.35f);
@@ -29,7 +29,7 @@ namespace FogboundMaze.Tests
         public void FatalDamage_ImmediatelyDisplaysZeroWithResultPanel()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Machete);
+            director.SelectWeapon(WeaponType.LongBlade);
             director.BeginRun();
             director.Player.Health.Damage(91f);
             director.Hud.Refresh(director, director.Player);
@@ -149,7 +149,7 @@ namespace FogboundMaze.Tests
         public IEnumerator UnexpectedFall_RecoversAndRetryResetsGravity()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             yield return new WaitForSeconds(0.4f);
             var controller = director.Player.GetComponent<CharacterController>();
             var grounded = director.Player.transform.position;
@@ -213,7 +213,7 @@ namespace FogboundMaze.Tests
         public IEnumerator PlayerCanWalkThroughOpenGateIntoMaze()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             Assert.That(director.Phase, Is.EqualTo(GamePhase.Staging));
             var controller = director.Player.GetComponent<CharacterController>();
             for (var step = 0; step < 35 && director.Phase == GamePhase.Staging; step++)
@@ -231,7 +231,7 @@ namespace FogboundMaze.Tests
         {
             var director = GameDirector.Instance;
             Assert.That(director.Hud.ExploredCells, Is.EqualTo(1));
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             director.BeginRun();
             foreach (var next in director.World.Layout.GetOpenNeighbors(director.World.Layout.Start))
             {
@@ -254,7 +254,7 @@ namespace FogboundMaze.Tests
         public IEnumerator EscapePauseFromStaging_CanReturnToLoadout()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             director.SetPaused(true);
             Assert.That(director.Phase, Is.EqualTo(GamePhase.Paused));
             Assert.That(Time.timeScale, Is.EqualTo(0f));
@@ -270,7 +270,7 @@ namespace FogboundMaze.Tests
         public IEnumerator MacheteSwing_DamagesEnemyInFront()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Machete);
+            director.SelectWeapon(WeaponType.LongBlade);
             director.BeginRun();
             var enemyObject = new GameObject("Melee Test Enemy");
             enemyObject.AddComponent<CharacterController>();
@@ -282,6 +282,7 @@ namespace FogboundMaze.Tests
 
             director.Player.Weapon.Tick(true, true, false);
             Assert.That(director.Player.Weapon.IsSwinging, Is.True);
+            yield return new WaitForSeconds(.2f);
             Assert.That(health.Current, Is.LessThan(health.Maximum));
             Object.Destroy(enemyObject);
             yield return null;
@@ -291,7 +292,7 @@ namespace FogboundMaze.Tests
         public IEnumerator PistolCrosshair_DamagesEnemyInSight()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             director.BeginRun();
             var enemyObject = new GameObject("Aim Test Enemy");
             var controller = enemyObject.AddComponent<CharacterController>();
@@ -307,7 +308,7 @@ namespace FogboundMaze.Tests
 
             director.Player.Weapon.Tick(true, true, false);
             Assert.That(health.Current, Is.LessThan(health.Maximum));
-            Assert.That(director.Player.Weapon.Ammunition, Is.EqualTo(9));
+            Assert.That(director.Player.Weapon.Ammunition, Is.EqualTo(29));
             Object.Destroy(enemyObject);
             yield return null;
         }
@@ -316,7 +317,7 @@ namespace FogboundMaze.Tests
         public IEnumerator PlayingRun_SpawnsEnemyAfterVisibleTelegraphDelay()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Machete);
+            director.SelectWeapon(WeaponType.LongBlade);
             director.BeginRun();
             yield return new WaitForSeconds(3.1f);
             Assert.That(director.ActiveEnemyCount, Is.GreaterThanOrEqualTo(1));
@@ -326,7 +327,7 @@ namespace FogboundMaze.Tests
         public IEnumerator UnifiedInput_MovesPlayerAndSwitchesCameraMode()
         {
             var director = GameDirector.Instance;
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             director.BeginRun();
             var start = director.Player.transform.position;
             director.Input.SetMobileMove(Vector2.right);
@@ -349,13 +350,13 @@ namespace FogboundMaze.Tests
             var director = GameDirector.Instance;
             for (var level = 2; level <= 7; level++)
             {
-                director.SelectWeapon(WeaponType.Pistol);
+                director.SelectWeapon(WeaponType.SubmachineGun);
                 director.BeginRun();
                 director.CompleteLevel();
                 director.NextLevel();
                 yield return null;
             }
-            director.SelectWeapon(WeaponType.Machete);
+            director.SelectWeapon(WeaponType.LongBlade);
             director.BeginRun();
 
             var unsafePosition = FindUnsafeCell(director);
@@ -390,9 +391,9 @@ namespace FogboundMaze.Tests
             Assert.That(director.World.Layout.Width, Is.EqualTo(7));
             Assert.That(director.Player.Weapon.Type, Is.EqualTo(WeaponType.None));
 
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             yield return null;
-            Assert.That(director.Player.Weapon.Type, Is.EqualTo(WeaponType.Pistol));
+            Assert.That(director.Player.Weapon.Type, Is.EqualTo(WeaponType.SubmachineGun));
             Assert.That(director.World.StartGate.activeSelf, Is.False);
 
             director.BeginRun();
@@ -407,7 +408,7 @@ namespace FogboundMaze.Tests
             var director = GameDirector.Instance;
             for (var level = 2; level <= 10; level++)
             {
-                director.SelectWeapon(WeaponType.Pistol);
+                director.SelectWeapon(WeaponType.SubmachineGun);
                 director.BeginRun();
                 director.CompleteLevel();
                 director.NextLevel();
@@ -420,7 +421,7 @@ namespace FogboundMaze.Tests
             Assert.That(director.CurrentLevel.miasma, Is.True);
             Assert.That(director.World.SafeLights, Is.Not.Empty);
             Assert.That(director.EnemyPoolCapacity, Is.GreaterThanOrEqualTo(14));
-            director.SelectWeapon(WeaponType.Pistol);
+            director.SelectWeapon(WeaponType.SubmachineGun);
             director.BeginRun();
             director.CompleteLevel();
             Assert.That(director.Progress.CompletedCount, Is.EqualTo(10));

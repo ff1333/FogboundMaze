@@ -43,6 +43,7 @@ namespace FogboundMaze
             Instance = this;
             levels = LevelCatalog.CreateDefault();
             var smoke = System.Array.Exists(System.Environment.GetCommandLineArgs(), value => value == "-fogboundSmoke");
+            if (smoke) Application.runInBackground = true;
             Progress = new CampaignProgress(smoke);
             BuildPersistentSystems();
             CombatEffects.Ensure();

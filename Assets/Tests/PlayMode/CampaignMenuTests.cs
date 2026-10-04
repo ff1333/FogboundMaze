@@ -73,12 +73,12 @@ namespace FogboundMaze.Tests
             var game = GameDirector.Instance;
             game.ShowLevelSelection();
             game.SelectLevel(1);
-            game.SelectWeapon(WeaponType.Pistol);
+            game.SelectWeapon(WeaponType.SubmachineGun);
             game.BeginRun();
             game.Player.Health.Damage(200f);
             Assert.That(game.Progress.IsUnlocked(2), Is.False);
             game.Retry();
-            game.SelectWeapon(WeaponType.Pistol);
+            game.SelectWeapon(WeaponType.SubmachineGun);
             game.BeginRun();
             game.CompleteLevel();
             Assert.That(game.Progress.IsCompleted(1), Is.True);
@@ -91,7 +91,7 @@ namespace FogboundMaze.Tests
             Assert.That(game.Progress.IsUnlocked(2), Is.True);
             Assert.That(game.Progress.IsUnlocked(3), Is.False);
             Assert.That(game.SelectLevel(2), Is.True);
-            game.SelectWeapon(WeaponType.Machete);
+            game.SelectWeapon(WeaponType.LongBlade);
             game.SetPaused(true);
             game.Hud.transform.Find("Pause/Levels").GetComponent<Button>().onClick.Invoke();
             Assert.That(game.Phase, Is.EqualTo(GamePhase.LevelSelect));
@@ -143,14 +143,14 @@ namespace FogboundMaze.Tests
         public IEnumerator ReloadFeedbackCompletes_AndLeavingRunClearsTransientState()
         {
             var game = GameDirector.Instance;
-            game.ShowLevelSelection(); game.SelectLevel(1); game.SelectWeapon(WeaponType.Pistol);
+            game.ShowLevelSelection(); game.SelectLevel(1); game.SelectWeapon(WeaponType.SubmachineGun);
             var weapon = game.Player.Weapon;
             weapon.Tick(false,true,false);
-            Assert.That(weapon.Ammunition,Is.EqualTo(9));
+            Assert.That(weapon.Ammunition,Is.EqualTo(29));
             weapon.Tick(false,false,true);
             Assert.That(weapon.IsReloading,Is.True);
-            yield return new WaitForSeconds(1.3f);
-            Assert.That(weapon.Ammunition,Is.EqualTo(10));
+            yield return new WaitForSeconds(1.5f);
+            Assert.That(weapon.Ammunition,Is.EqualTo(30));
             Assert.That(weapon.IsReloading,Is.False);
             weapon.Tick(false,true,false);
             weapon.Tick(false,false,true);
@@ -201,7 +201,7 @@ namespace FogboundMaze.Tests
             var game = GameDirector.Instance;
             game.ShowLevelSelection();
             game.SelectLevel(1);
-            game.SelectWeapon(WeaponType.Pistol);
+            game.SelectWeapon(WeaponType.SubmachineGun);
             game.BeginRun();
             game.enabled = false;
             var pool = Object.FindFirstObjectByType<EnemyPool>();

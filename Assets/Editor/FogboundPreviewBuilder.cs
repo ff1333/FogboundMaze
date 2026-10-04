@@ -6,11 +6,11 @@ public static class FogboundPreviewBuilder
 {
     public static void Build()
     {
-        foreach (var weapon in new[] { "Pistol", "Knife" })
+        foreach (var weapon in new[] { "SMG", "LongBlade" })
         {
             var model = Object.Instantiate(Resources.Load<GameObject>("Weapons/" + weapon));
             model.transform.position = new Vector3(500,500,500);
-            model.transform.rotation = Quaternion.Euler(0, -65, weapon == "Knife" ? 45 : -15);
+            model.transform.rotation = Quaternion.Euler(0, -65, weapon == "LongBlade" ? 45 : -15);
             var bounds = model.GetComponentInChildren<Renderer>().bounds;
             foreach (var renderer in model.GetComponentsInChildren<Renderer>()) bounds.Encapsulate(renderer.bounds);
             var cameraObject = new GameObject("Preview Camera");

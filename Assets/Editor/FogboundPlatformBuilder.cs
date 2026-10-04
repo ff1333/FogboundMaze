@@ -17,12 +17,12 @@ public static class FogboundPlatformBuilder
 
     public static void BuildWindowsRelease()
     {
-        Build(BuildTarget.StandaloneWindows64, "Builds/Windows/v1.2.0/FogboundMaze.exe", BuildOptions.None);
+        Build(BuildTarget.StandaloneWindows64, "Builds/Windows/v1.2.1/FogboundMaze.exe", BuildOptions.None);
     }
 
     public static void BuildWebGLRelease()
     {
-        Build(BuildTarget.WebGL, "Builds/WebGL/v1.2.0", BuildOptions.None);
+        Build(BuildTarget.WebGL, "Builds/WebGL/v1.2.1", BuildOptions.None);
     }
 
     public static void BuildAndroidRelease()
@@ -34,14 +34,14 @@ public static class FogboundPlatformBuilder
                 $"-Djava.net.preferIPv4Stack=true -Dhttps.proxyHost={proxy.Host} -Dhttps.proxyPort={proxy.Port} " +
                 $"-Dhttp.proxyHost={proxy.Host} -Dhttp.proxyPort={proxy.Port}");
         EditorUserBuildSettings.buildAppBundle = false;
-        PlayerSettings.Android.bundleVersionCode = 6;
+        PlayerSettings.Android.bundleVersionCode = FogboundMaze.ReleaseVersion.AndroidCode;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
-        Build(BuildTarget.Android, "Builds/Android/FogboundMaze-v1.2.0.apk", BuildOptions.None);
+        Build(BuildTarget.Android, "Builds/Android/FogboundMaze-v1.2.1.apk", BuildOptions.None);
     }
 
     private static void Build(BuildTarget target, string location, BuildOptions options)
     {
-        PlayerSettings.bundleVersion = "1.2.0";
+        PlayerSettings.bundleVersion = FogboundMaze.ReleaseVersion.Current;
         var directory = Path.GetDirectoryName(location);
         if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions

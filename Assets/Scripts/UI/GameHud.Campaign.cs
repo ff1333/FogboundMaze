@@ -31,7 +31,7 @@ namespace FogboundMaze
                 SetRect(quit.GetComponent<RectTransform>(), new Vector2(0.08f, 0.10f), new Vector2(0.32f, 0.19f));
                 quit.onClick.AddListener(() => GameDirector.Instance.QuitGame());
             }
-            var version = Label("Version", titlePanel.transform, "v" + Application.version, 20, TextAnchor.MiddleRight, new Color(0.70f, 0.77f, 0.76f));
+            var version = Label("Version", titlePanel.transform, "v" + ReleaseVersion.Display, 20, TextAnchor.MiddleRight, new Color(0.70f, 0.77f, 0.76f));
             SetRect(version.rectTransform, new Vector2(0.7f, 0.025f), new Vector2(0.95f, 0.075f));
 
             levelPanel = PanelObject("Level Select", transform, new Color(0.025f, 0.04f, 0.045f, 0.94f));

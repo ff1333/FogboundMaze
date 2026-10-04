@@ -20,6 +20,8 @@ namespace FogboundMaze
         private bool elite;
         private Animation animationPlayer;
         private MaterialPropertyBlock flashProperties;
+        private float staggerUntil;
+        private Coroutine hitFlash;
 
         public EnemyState State { get; private set; } = EnemyState.Inactive;
         public bool IsActive => gameObject.activeSelf && State != EnemyState.Dead;
@@ -49,6 +51,8 @@ namespace FogboundMaze
             State = EnemyState.Wander;
             nextPathTime = 0f;
             nextAttack = 0f;
+            staggerUntil = 0f;
+            hitFlash = null;
             var normal = transform.Find("Normal Visual");
             var heavy = transform.Find("Elite Visual");
             if (normal != null) normal.gameObject.SetActive(!elite);
@@ -62,6 +66,7 @@ namespace FogboundMaze
         {
             if (State is EnemyState.Inactive or EnemyState.Dead || player == null || GameDirector.Instance?.Phase != GamePhase.Playing)
                 return;
+            if (Time.time < staggerUntil) return;
 
             var distance = Vector3.Distance(transform.position, player.transform.position);
             if (distance <= 1.45f)
@@ -71,7 +76,9 @@ namespace FogboundMaze
                 {
                     nextAttack = Time.time + (elite ? 0.78f : 1.05f);
                     Play("Idle_Attack", true);
-                    player.Health.Damage(damage);
+                    if (!Physics.Linecast(transform.position + Vector3.up,
+                        player.transform.position + Vector3.up, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                        player.Health.Damage(damage);
                 }
                 return;
             }
@@ -106,7 +113,9 @@ namespace FogboundMaze
             health.Damage(amount);
             if (!health.IsDead)
             {
-                StartCoroutine(HitFlash());
+                staggerUntil = Time.time + (elite ? .045f : .08f);
+                if (hitFlash != null) StopCoroutine(hitFlash);
+                hitFlash = StartCoroutine(HitFlash());
             }
         }
 
@@ -129,7 +138,7 @@ namespace FogboundMaze
         private IEnumerator HitFlash()
         {
             SetFlash(true);
-            yield return new WaitForSeconds(0.08f);
+            yield return new WaitForSeconds(0.14f);
             SetFlash(false);
         }
 

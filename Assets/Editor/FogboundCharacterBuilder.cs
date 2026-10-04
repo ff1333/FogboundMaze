@@ -79,6 +79,7 @@ public static class FogboundCharacterBuilder
         }
         EditorUtility.SetDirty(material);
         AssetDatabase.SaveAssets();
+        FogboundWeaponBuilder.Build();
         Debug.Log("FOGBOUND_CHARACTERS_BUILD_PASS");
     }
 

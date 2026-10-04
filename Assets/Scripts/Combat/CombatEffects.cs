@@ -94,11 +94,11 @@ namespace FogboundMaze
         {
             forward.y = 0f;
             forward.Normalize();
-            var stroke = Ensure().Begin(new Color(.72f,.95f,1f,.60f), .018f, .16f, 17);
+            var stroke = Ensure().Begin(new Color(.72f,.95f,1f,.75f), .035f, .22f, 17);
             for (var i = 0; i < 17; i++)
             {
                 var direction = Quaternion.AngleAxis(Mathf.Lerp(-48,48,i / 16f),Vector3.up) * forward;
-                stroke.Line.SetPosition(i, origin + direction * 1.65f + Vector3.up * Mathf.Lerp(.15f,-.15f,i / 16f));
+                stroke.Line.SetPosition(i, origin + direction * 2.6f + Vector3.up * Mathf.Lerp(.5f,-.5f,i / 16f));
             }
         }
 
@@ -109,12 +109,12 @@ namespace FogboundMaze
             var tangent = Vector3.Cross(normal, Vector3.up);
             if (tangent.sqrMagnitude < .01f) tangent = Vector3.right;
             tangent.Normalize();
-            for (var i = 0; i < 7; i++)
+            for (var i = 0; i < 12; i++)
             {
                 effect.sparks.Emit(new ParticleSystem.EmitParams {
                     position = point + normal * .04f,
                     velocity = normal * Random.Range(.6f,1.7f) + Random.insideUnitSphere * 1.5f,
-                    startColor = color, startSize = .045f, startLifetime = .28f
+                    startColor = color, startSize = .07f, startLifetime = .36f
                 }, 1);
             }
             var mark = effect.Begin(color, .035f, .22f, 2);

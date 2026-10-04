@@ -40,6 +40,7 @@ namespace FogboundMaze
         private float damagePulse;
         private readonly List<Image> damageEdges = new();
         private Text hitMarker;
+        private Text hitDetails;
 
         public int ExploredCells => miniMap?.VisitedCount ?? 0;
 
@@ -57,6 +58,7 @@ namespace FogboundMaze
             shotPulse = Mathf.Max(0f, shotPulse - Time.unscaledDeltaTime * 5f);
             crosshair.transform.localScale = Vector3.one * (1f + shotPulse * .35f);
             hitMarker.gameObject.SetActive(crosshair.activeSelf && crosshairFlash > 0f);
+            hitDetails.gameObject.SetActive(crosshair.activeSelf && crosshairFlash > 0f);
             damagePulse = Mathf.Max(0f, damagePulse - Time.unscaledDeltaTime * 2f);
             foreach (var edge in damageEdges) edge.color = new Color(.95f,.15f,.24f,damagePulse * .30f);
             if (crosshairFlash > 0f)
@@ -75,8 +77,8 @@ namespace FogboundMaze
             killsText.text = $"KILLS  {director.Kills:000}";
             weaponText.text = player.Weapon.Type switch
             {
-                WeaponType.Pistol => player.Weapon.IsReloading ? $"RELOAD  {player.Weapon.ReloadProgress:P0}" : $"PISTOL  {player.Weapon.Ammunition:00} / 10",
-                WeaponType.Machete => "MACHETE",
+                WeaponType.SubmachineGun => player.Weapon.IsReloading ? $"RELOAD  {player.Weapon.ReloadProgress:P0}" : $"SMG  {player.Weapon.Ammunition:00} / {player.Weapon.MagazineSize}",
+                WeaponType.LongBlade => "LONG BLADE  |  3.4m",
                 _ => "UNARMED"
             };
             statusText.text = director.CurrentLevel.miasma
@@ -165,7 +167,14 @@ namespace FogboundMaze
 
         public void FlashCrosshair()
         {
-            crosshairFlash = 0.18f;
+            crosshairFlash = 0.35f;
+        }
+        public void ConfirmHit(float damage, bool killed)
+        {
+            FlashCrosshair();
+            hitMarker.color = killed ? Warning : Accent;
+            hitDetails.color = hitMarker.color;
+            hitDetails.text = killed ? "ELIMINATED" : $"HIT  {damage:0}";
         }
         public void PulseShot() => shotPulse = 1f;
 
@@ -244,6 +253,12 @@ namespace FogboundMaze
             hitMarker.rectTransform.anchorMin = hitMarker.rectTransform.anchorMax = Vector2.one * .5f;
             hitMarker.rectTransform.sizeDelta = new Vector2(55,55);
             hitMarker.gameObject.SetActive(false);
+            hitDetails = Label("Hit Details", transform, "", 22, TextAnchor.MiddleCenter, Accent);
+            hitDetails.raycastTarget = false;
+            hitDetails.rectTransform.anchorMin = hitDetails.rectTransform.anchorMax = Vector2.one * .5f;
+            hitDetails.rectTransform.anchoredPosition = new Vector2(0,-48);
+            hitDetails.rectTransform.sizeDelta = new Vector2(230,32);
+            hitDetails.gameObject.SetActive(false);
         }
 
         private void BuildDamageFeedback()
@@ -292,17 +307,17 @@ namespace FogboundMaze
             SetRect(title.rectTransform, new Vector2(0f, 0.72f), Vector2.one);
             var subtitle = Label("Subtitle", selectionPanel.transform, "ONE WEAPON. ONE EXIT.", 23, TextAnchor.MiddleCenter, new Color(0.80f, 0.87f, 0.86f));
             SetRect(subtitle.rectTransform, new Vector2(0f, 0.61f), new Vector2(1f, 0.76f));
-            var pistol = Button("Pistol", selectionPanel.transform, "PISTOL\n10 rounds  |  28m", new Color(0.12f, 0.42f, 0.55f));
+            var pistol = Button("Pistol", selectionPanel.transform, "SMG\n30 rounds  |  32m", new Color(0.12f, 0.42f, 0.55f));
             SetRect(pistol.GetComponent<RectTransform>(), new Vector2(0.08f, 0.23f), new Vector2(0.48f, 0.58f));
-            pistol.onClick.AddListener(() => GameDirector.Instance.SelectWeapon(WeaponType.Pistol));
-            var machete = Button("Machete", selectionPanel.transform, "MACHETE\nhigh damage  |  close", new Color(0.55f, 0.25f, 0.12f));
+            pistol.onClick.AddListener(() => GameDirector.Instance.SelectWeapon(WeaponType.SubmachineGun));
+            var machete = Button("Machete", selectionPanel.transform, "LONG BLADE\n70 damage  |  3.4m", new Color(0.55f, 0.25f, 0.12f));
             SetRect(machete.GetComponent<RectTransform>(), new Vector2(0.52f, 0.23f), new Vector2(0.92f, 0.58f));
-            machete.onClick.AddListener(() => GameDirector.Instance.SelectWeapon(WeaponType.Machete));
-            AddWeaponPreview(pistol, "PistolPreview");
-            AddWeaponPreview(machete, "KnifePreview");
+            machete.onClick.AddListener(() => GameDirector.Instance.SelectWeapon(WeaponType.LongBlade));
+            AddWeaponPreview(pistol, "SMGPreview");
+            AddWeaponPreview(machete, "LongBladePreview");
             var controls = Application.isMobilePlatform
                 ? "LEFT STICK MOVE  |  SWIPE LOOK  |  FIRE ATTACK\nRUN SPRINT  |  R RELOAD  |  VIEW CAMERA"
-                : "WASD MOVE  |  MOUSE AIM  |  LEFT CLICK ATTACK\nSHIFT SPRINT  |  R RELOAD  |  V CAMERA  |  ESC RELEASE MOUSE";
+                : "WASD MOVE  |  MOUSE AIM  |  HOLD LEFT CLICK ATTACK\nSHIFT SPRINT  |  R RELOAD  |  V CAMERA  |  ESC RELEASE MOUSE";
             var help = Label("Controls", selectionPanel.transform, controls, 22, TextAnchor.MiddleCenter);
             SetRect(help.rectTransform, new Vector2(0.04f, 0.10f), new Vector2(0.96f, 0.23f));
             var back = Button("Back To Levels", selectionPanel.transform, "BACK TO LEVELS", new Color(0.16f, 0.22f, 0.23f));
