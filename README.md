@@ -1,10 +1,10 @@
 # Fogbound Maze
 
-Current candidate: **v1.2.0**. See [the illustrated polish guide](docs/10_V1_2_0_POLISH.md) for the field guide, reusable combat effects, reload feedback and release evidence. The v1.1.0 results below are retained as the previous release baseline.
+Current candidate: **v1.2.1**. See [the weapon and version correction guide](docs/11_V1_2_1_WEAPONS.md) for right-handed weapons, automatic SMG fire, a longer blade and collision verification. Earlier release results below are retained as history.
 
 Fogbound Maze is a Unity 6 third-person and first-person survival maze game.
 The player starts at the title screen, selects an unlocked level, then chooses
-a pistol or machete outside a procedurally generated maze,
+an SMG or long blade outside a procedurally generated maze,
 enters through the start gate, survives zombie attacks, and reaches the exit.
 
 ## Portfolio Scope
