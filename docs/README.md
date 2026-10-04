@@ -1,6 +1,7 @@
 # Fogbound Maze 文档入口
 
-**当前 v1.2.1：先看 [11_V1_2_1_WEAPONS.md](11_V1_2_1_WEAPONS.md)。** 右手武器、冲锋枪、长刀、命中反馈与版本显示修复。
+**当前 v1.2.2：先看 [12_V1_2_2_LIGHTS_AND_RELOAD.md](12_V1_2_2_LIGHTS_AND_RELOAD.md)。** 避难灯不再指向出口，装弹完成增加声音与 READY 提示。
+v1.2.1 的右手冲锋枪、长刀与命中反馈见 [11_V1_2_1_WEAPONS.md](11_V1_2_1_WEAPONS.md)。
 v1.2.0 的图鉴和表现优化见 [10_V1_2_0_POLISH.md](10_V1_2_0_POLISH.md)，后面的 v1.1.0 说明均为历史。
 
 历史版本 **v1.1.0** 见 [09_V1_1_0_MENU_AND_CHARACTERS.md](09_V1_1_0_MENU_AND_CHARACTERS.md)：开始界面、十关选择、本地通关记录、新角色，以及当时的复测和发布步骤。

@@ -49,8 +49,11 @@ path. The generator evaluates multiple candidates using route length, turns,
 dead ends and junctions; later levels use larger grids and more candidate
 selection so complexity increases as part of the difficulty curve.
 Enemy spawns exclude the start area and cells immediately around the player.
-Safe lights are placed along the solved route so miasma never creates an
-unavoidable failure state.
+As of v1.2.2, safe lights use a separate seeded shuffle over all maze cells,
+with a minimum two-cell spacing. The entrance remains a refuge; lamps in side
+routes and dead ends are not clues to the exit. Placement does not read the
+solution. Automated exposure checks audit the four default miasma levels;
+they do not guarantee survival while fighting or exploring every wrong turn.
 
 ## Release Boundary
 

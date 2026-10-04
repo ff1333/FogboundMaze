@@ -1,6 +1,6 @@
 # Fogbound Maze
 
-Current candidate: **v1.2.1**. See [the weapon and version correction guide](docs/11_V1_2_1_WEAPONS.md) for right-handed weapons, automatic SMG fire, a longer blade and collision verification. Earlier release results below are retained as history.
+Current candidate: **v1.2.2**. See [the safe-light and reload guide](docs/12_V1_2_2_LIGHTS_AND_RELOAD.md). Refuge lamps no longer reveal the exit route; completed reloads have a distinct sound and a brief READY indicator. Right-handed weapons and hit feedback from v1.2.1 are retained.
 
 Fogbound Maze is a Unity 6 third-person and first-person survival maze game.
 The player starts at the title screen, selects an unlocked level, then chooses
@@ -40,7 +40,14 @@ under `docs/`.
 
 ![Survivor and zombies](docs/images/v1.1.0-actors.png)
 
-## Release Status
+## Current Validation
+
+- EditMode: **15/15 PASS**; PlayMode: **34/34 PASS**.
+- Platform results and device-testing limitations: [v1.2.2 evidence](docs/test-results/v1.2.2/README.md).
+- Current development log: [safe lights and reload feedback](docs/devlogs/10-safe-lights-and-reload-feedback.md).
+- Release attachments: `Builds/Packages/v1.2.2/` (ignored by Git).
+
+## Historical v1.1.0 Results
 
 - Local version: `v1.1.0` campaign menus and animated character art
 - EditMode tests: `10/10 PASS`
