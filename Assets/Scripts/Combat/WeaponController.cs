@@ -183,6 +183,15 @@ namespace FogboundMaze
                 viewWeapon.localRotation = Quaternion.Slerp(Quaternion.identity, start, t / .12f);
                 yield return null;
             }
+            while (GameDirector.Instance != null && GameDirector.Instance.Phase == GamePhase.Paused)
+                yield return null;
+            if (owner.Health.IsDead || (GameDirector.Instance != null
+                && GameDirector.Instance.Phase is not (GamePhase.Playing or GamePhase.Staging)))
+            {
+                viewWeapon.localRotation = Quaternion.identity;
+                swinging = false;
+                yield break;
+            }
             ResolveBladeHit();
             for (var t = 0f; t < .18f; t += Time.deltaTime)
             {

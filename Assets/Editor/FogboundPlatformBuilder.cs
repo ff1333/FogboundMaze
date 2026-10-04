@@ -32,7 +32,8 @@ public static class FogboundPlatformBuilder
         if (proxy != null && proxy != destination)
             Environment.SetEnvironmentVariable("JAVA_TOOL_OPTIONS",
                 $"-Djava.net.preferIPv4Stack=true -Dhttps.proxyHost={proxy.Host} -Dhttps.proxyPort={proxy.Port} " +
-                $"-Dhttp.proxyHost={proxy.Host} -Dhttp.proxyPort={proxy.Port}");
+                $"-Dhttp.proxyHost={proxy.Host} -Dhttp.proxyPort={proxy.Port} " +
+                "-Dsun.net.client.defaultConnectTimeout=5000 -Dsun.net.client.defaultReadTimeout=5000");
         EditorUserBuildSettings.buildAppBundle = false;
         PlayerSettings.Android.bundleVersionCode = FogboundMaze.ReleaseVersion.AndroidCode;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;

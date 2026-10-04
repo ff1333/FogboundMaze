@@ -133,6 +133,18 @@ namespace FogboundMaze.Tests
         }
 
         [UnityTest]
+        public IEnumerator DeathDuringWindupCancelsPendingDamage()
+        {
+            var enemy = Enemy(Vector3.forward * 2f);
+            game.Player.Weapon.Equip(WeaponType.LongBlade);
+            game.Player.Weapon.Tick(true,false,false);
+            game.Player.Health.Damage(200f);
+            yield return new WaitForSeconds(.2f);
+            Assert.That(enemy.GetComponent<Health>().Current,Is.EqualTo(125f));
+            Assert.That(game.Player.Weapon.IsSwinging,Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator NearbyZombieCannotDamagePlayerThroughWall()
         {
             var enemy = Enemy(Vector3.forward * 1.1f);
