@@ -254,16 +254,8 @@ namespace FogboundMaze
 
         private void CreateSafeLights(LevelDefinition level)
         {
-            var path = MazePathfinder.FindPath(Layout, Layout.Start, Layout.Goal);
-            var spacing = Mathf.Max(3, Mathf.RoundToInt(level.safeLightRadius / CellSize * 1.4f));
-            for (var i = 0; i < path.Count; i += spacing)
-            {
-                CreateSafeLight(CellToWorld(path[i]));
-            }
-            if (safeLights.Count == 0 || Vector3.Distance(safeLights[^1], CellToWorld(Layout.Goal)) > level.safeLightRadius)
-            {
-                CreateSafeLight(CellToWorld(Layout.Goal));
-            }
+            foreach (var cell in SafeLightLayout.Generate(Layout, level.seed))
+                CreateSafeLight(CellToWorld(cell));
         }
 
         private void CreateSafeLight(Vector3 position)

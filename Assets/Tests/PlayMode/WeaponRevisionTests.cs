@@ -74,6 +74,61 @@ namespace FogboundMaze.Tests
             yield return new WaitForSeconds(1.5f);
             Assert.That(gun.IsReloading, Is.False);
             Assert.That(gun.Ammunition, Is.EqualTo(30));
+            Assert.That(gun.ReloadReady, Is.True);
+            yield return null;
+            game.Hud.Refresh(game, game.Player);
+            Assert.That(game.Hud.transform.Find("Top Bar/Weapon").GetComponent<Text>().text, Is.EqualTo("READY  30 / 30"));
+            gun.Tick(true, false, false);
+            Assert.That(gun.ReloadReady, Is.False);
+            Assert.That(gun.Ammunition, Is.EqualTo(29));
+        }
+
+        [UnityTest]
+        public IEnumerator ReloadPauseFreezesProgressAndReadyExpires()
+        {
+            var gun = game.Player.Weapon;
+            gun.Tick(true, false, false);
+            gun.Tick(false, false, true);
+            yield return new WaitForSeconds(.2f);
+            game.SetPaused(true);
+            yield return null;
+            var progress = gun.ReloadProgress;
+            yield return new WaitForSecondsRealtime(1.5f);
+            Assert.That(gun.ReloadProgress, Is.EqualTo(progress).Within(.001f));
+            Assert.That(gun.IsReloading, Is.True);
+            Assert.That(gun.Ammunition, Is.EqualTo(29));
+            Assert.That(gun.ReloadReady, Is.False);
+            game.SetPaused(false);
+            yield return new WaitForSeconds(1.3f);
+            Assert.That(gun.ReloadReady, Is.True);
+            yield return new WaitForSeconds(.9f);
+            Assert.That(gun.ReloadReady, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator ReloadDeathDoesNotRefillOrSignalReady()
+        {
+            var gun = game.Player.Weapon;
+            gun.Tick(true, false, false);
+            gun.Tick(false, false, true);
+            game.Player.Health.Damage(200f);
+            yield return new WaitForSeconds(1.5f);
+            Assert.That(gun.ReloadReady, Is.False);
+            Assert.That(gun.IsReloading, Is.False);
+            Assert.That(gun.Ammunition, Is.EqualTo(29));
+        }
+
+        [UnityTest]
+        public IEnumerator ChangingWeaponCancelsReloadCompletion()
+        {
+            var gun = game.Player.Weapon;
+            gun.Tick(true, false, false);
+            gun.Tick(false, false, true);
+            gun.Equip(WeaponType.LongBlade);
+            yield return new WaitForSeconds(1.5f);
+            Assert.That(gun.IsReloading, Is.False);
+            Assert.That(gun.ReloadReady, Is.False);
+            Assert.That(gun.Ammunition, Is.Zero);
         }
 
         [UnityTest]

@@ -77,10 +77,13 @@ namespace FogboundMaze
             killsText.text = $"KILLS  {director.Kills:000}";
             weaponText.text = player.Weapon.Type switch
             {
-                WeaponType.SubmachineGun => player.Weapon.IsReloading ? $"RELOAD  {player.Weapon.ReloadProgress:P0}" : $"SMG  {player.Weapon.Ammunition:00} / {player.Weapon.MagazineSize}",
+                WeaponType.SubmachineGun => player.Weapon.IsReloading ? $"RELOAD  {player.Weapon.ReloadProgress:P0}"
+                    : player.Weapon.ReloadReady ? $"READY  {player.Weapon.Ammunition:00} / {player.Weapon.MagazineSize}"
+                    : $"SMG  {player.Weapon.Ammunition:00} / {player.Weapon.MagazineSize}",
                 WeaponType.LongBlade => "LONG BLADE  |  3.4m",
                 _ => "UNARMED"
             };
+            weaponText.color = player.Weapon.ReloadReady ? Accent : Ink;
             statusText.text = director.CurrentLevel.miasma
                 ? (director.IsPlayerSafe ? "LIGHT SAFE" : "MIASMA EXPOSED")
                 : string.Empty;

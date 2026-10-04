@@ -2,8 +2,8 @@ namespace FogboundMaze
 {
     public static class ReleaseVersion
     {
-        public const string Current = "1.2.1";
-        public const int AndroidCode = 7;
+        public const string Current = "1.2.2";
+        public const int AndroidCode = 8;
         public static string Display
         {
             get

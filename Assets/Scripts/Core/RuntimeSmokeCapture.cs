@@ -23,6 +23,9 @@ namespace FogboundMaze
             var actors = System.Array.Exists(arguments, value => value == "-fogboundActors");
             var guide = System.Array.Exists(arguments, value => value == "-fogboundGuide");
             var combat = System.Array.Exists(arguments, value => value == "-fogboundCombat");
+            var reload = System.Array.Exists(arguments, value => value == "-fogboundReload");
+            var levelNumber = int.TryParse(ReadArgument(arguments, "-fogboundLevel"), out var requestedLevel)
+                ? Mathf.Clamp(requestedLevel, 1, 10) : 1;
             yield return new WaitForSecondsRealtime(1f);
             if (Application.version != ReleaseVersion.Current)
             {
@@ -41,7 +44,12 @@ namespace FogboundMaze
             if (levels || loadout || pause || gameplay || actors)
             {
                 GameDirector.Instance.ShowLevelSelection();
-                if (!levels) GameDirector.Instance.SelectLevel(1);
+                if (!levels)
+                {
+                    for (var completed = 1; completed < levelNumber; completed++)
+                        GameDirector.Instance.Progress.Complete(completed);
+                    GameDirector.Instance.SelectLevel(levelNumber);
+                }
                 yield return null;
             }
 
@@ -144,6 +152,22 @@ namespace FogboundMaze
 
             if (!string.IsNullOrWhiteSpace(output))
             {
+                if (reload)
+                {
+                    var weapon = GameDirector.Instance.Player.Weapon;
+                    weapon.Tick(true, false, false);
+                    weapon.Tick(false, false, true);
+                    yield return new WaitForSeconds(1.45f);
+                    if (weapon.IsReloading || !weapon.ReloadReady || weapon.Ammunition != 30)
+                    {
+                        Debug.LogError("FOGBOUND_RELOAD_FAIL");
+                        Application.Quit(2);
+                        yield break;
+                    }
+                    Debug.Log("FOGBOUND_RELOAD_PASS ammo=30 ready=true");
+                    Time.timeScale = 0f;
+                    yield return null;
+                }
                 if (combat)
                 {
                     GameDirector.Instance.Player.Weapon.Tick(true,true,false);

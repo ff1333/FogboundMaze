@@ -97,7 +97,7 @@ namespace FogboundMaze
                 dayDuration = Mathf.Lerp(130f, 75f, (number - 1) / 9f),
                 miasma = miasma,
                 miasmaDamagePerSecond = miasma ? Mathf.Lerp(4f, 8f, (number - 7) / 3f) : 0f,
-                safeLightRadius = miasma ? Mathf.Lerp(7f, 5f, (number - 7) / 3f) : 7f
+                safeLightRadius = miasma ? Mathf.Lerp(7f, 6.25f, (number - 7) / 3f) : 7f
             };
         }
     }

@@ -22,6 +22,7 @@ namespace FogboundMaze
         private bool reloading;
         private bool swinging;
         private float reloadProgress;
+        private float reloadReadyUntil;
         private AudioSource audioSource;
         private readonly HashSet<EnemyAgent> struck = new();
 
@@ -30,6 +31,7 @@ namespace FogboundMaze
         public int Ammunition => ammunition;
         public int MagazineSize => type == WeaponType.SubmachineGun ? 30 : 0;
         public bool IsReloading => reloading;
+        public bool ReloadReady => Time.time < reloadReadyUntil;
         public bool IsSwinging => swinging;
 
         public void Initialize(PlayerController player, Camera camera)
@@ -59,6 +61,7 @@ namespace FogboundMaze
             StopAllCoroutines();
             reloading = swinging = false;
             reloadProgress = recoil = nextAttack = 0f;
+            reloadReadyUntil = 0f;
             type = weaponType;
             ammunition = MagazineSize;
             foreach (Transform child in viewMount) Destroy(child.gameObject);
@@ -101,6 +104,7 @@ namespace FogboundMaze
         private void Fire()
         {
             ammunition--;
+            reloadReadyUntil = 0f;
             recoil = 1f;
             viewWeapon.localRotation = Quaternion.Euler(-5f,0f,0f);
             viewWeapon.localPosition = Vector3.back * .045f;
@@ -222,9 +226,20 @@ namespace FogboundMaze
             }
             viewWeapon.localPosition = Vector3.zero;
             viewWeapon.localRotation = Quaternion.identity;
+            while (GameDirector.Instance != null && GameDirector.Instance.Phase == GamePhase.Paused)
+                yield return null;
+            if (owner.Health.IsDead || (GameDirector.Instance != null
+                && GameDirector.Instance.Phase is not (GamePhase.Playing or GamePhase.Staging)))
+            {
+                reloadProgress = 0f;
+                reloading = false;
+                yield break;
+            }
             reloadProgress = 1f;
             ammunition = MagazineSize;
             reloading = false;
+            reloadReadyUntil = Time.time + .85f;
+            audioSource.PlayOneShot(ProceduralAudio.ReloadComplete, .9f);
         }
 
         private void OnDestroy()

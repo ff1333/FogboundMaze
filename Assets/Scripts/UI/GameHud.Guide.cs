@@ -18,7 +18,7 @@ namespace FogboundMaze
             4 => "DENSE FOG\nFog now limits distant visibility. Use nearby landmarks and your explored map.",
             5 => "HEAVY ELITES\nLarge purple zombies join the hunt. They have more health, move faster and hit harder.",
             6 => "DAY AND NIGHT\nLight changes during the run. Your flashlight remains available through the night.",
-            7 => "MIASMA AND SAFE LIGHTS\nOutside a lamp's safe radius, miasma drains health. Travel from light to light.",
+            7 => "MIASMA AND SAFE LIGHTS\nMiasma drains health outside safe lights. Lamps also stand in side routes and dead ends; they do not mark the exit.",
             8 => "DEEP ZONE\nFog, elites, night and miasma combine. Longer routes and tighter safe zones raise the pressure.",
             9 => "LOCKDOWN\nMore frequent enemies and more elites. Retrace explored paths when a route becomes unsafe.",
             _ => "THE LAST EXIT\nThe largest maze and strongest combined pressure. Clear this exit to finish the campaign."
