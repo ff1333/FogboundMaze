@@ -1,6 +1,6 @@
 # Fogbound Maze
 
-Current candidate: **v1.2.2**. See [the safe-light and reload guide](docs/12_V1_2_2_LIGHTS_AND_RELOAD.md). Refuge lamps no longer reveal the exit route; completed reloads have a distinct sound and a brief READY indicator. Right-handed weapons and hit feedback from v1.2.1 are retained.
+Current candidate: **v1.3.0**. Chinese is the default UI language; the title-screen Settings menu supports English, mute, master/music/effects volume and local persistence. See [the settings guide and development log](docs/13_V1_3_0_SETTINGS.md) and [verification evidence](docs/test-results/v1.3.0/README.md). All earlier maze, lighting, reload and combat improvements are retained.
 
 Fogbound Maze is a Unity 6 third-person and first-person survival maze game.
 The player starts at the title screen, selects an unlocked level, then chooses
@@ -34,7 +34,9 @@ under `docs/`.
 
 ## Screenshots
 
-![Title screen](docs/images/v1.1.0-title.png)
+![v1.3.0 title screen](docs/test-results/v1.3.0/native/v1.3.0-title-zh.png)
+
+![Language and audio settings](docs/test-results/v1.3.0/native/v1.3.0-settings-en.png)
 
 ![Sequential level selection](docs/images/v1.1.0-levels.png)
 
