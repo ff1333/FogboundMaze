@@ -43,6 +43,8 @@ namespace FogboundMaze
             viewMount.localPosition = new Vector3(.32f, -.30f, .65f);
             audioSource = gameObject.AddComponent<AudioSource>();
             audioSource.spatialBlend = 0f;
+            PortfolioSettings.Changed += RefreshVolume;
+            RefreshVolume();
         }
 
         private void LateUpdate()
@@ -244,7 +246,9 @@ namespace FogboundMaze
 
         private void OnDestroy()
         {
+            PortfolioSettings.Changed -= RefreshVolume;
             if (viewMount != null) Destroy(viewMount.gameObject);
         }
+        private void RefreshVolume() { if (audioSource != null) audioSource.volume = PortfolioSettings.Effects; }
     }
 }

@@ -27,6 +27,10 @@ namespace FogboundMaze
             var levelNumber = int.TryParse(ReadArgument(arguments, "-fogboundLevel"), out var requestedLevel)
                 ? Mathf.Clamp(requestedLevel, 1, 10) : 1;
             yield return new WaitForSecondsRealtime(1f);
+            var previousLanguage=PortfolioSettings.Chinese;
+            PortfolioSettings.SetLanguage(!System.Array.Exists(arguments,value=>value=="-english"));
+            yield return null;
+            if(System.Array.Exists(arguments,value=>value=="-settings")) { PortfolioSettingsMenu.Instance.Open();yield return null; }
             if (Application.version != ReleaseVersion.Current)
             {
                 Debug.LogError($"FOGBOUND_VERSION_FAIL expected={ReleaseVersion.Current} actual={Application.version}");
@@ -186,6 +190,7 @@ namespace FogboundMaze
             }
 
             Debug.Log($"FOGBOUND_RUNTIME_SMOKE_PASS mode={(pause ? "pause" : gameplay ? "gameplay" : "staging")} screenshot={output}");
+            PortfolioSettings.SetLanguage(previousLanguage);
             Application.Quit(0);
         }
 
@@ -202,10 +207,14 @@ namespace FogboundMaze
         {
             // Render explicitly so a hidden/background smoke-test window still produces evidence.
             var camera = GameDirector.Instance.CameraRig.Camera;
-            var canvas = GameDirector.Instance.Hud.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = camera;
-            canvas.planeDistance = .31f;
+            foreach(var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = camera;
+                canvas.planeDistance = .31f;
+            }
+            Canvas.ForceUpdateCanvases();
+            foreach(var label in FindObjectsByType<LocalizedLabel>(FindObjectsSortMode.None)) label.Refresh();
             Canvas.ForceUpdateCanvases();
             var target = new RenderTexture(Screen.width, Screen.height, 24);
             var previous = RenderTexture.active;

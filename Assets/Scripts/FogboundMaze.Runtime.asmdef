@@ -3,6 +3,7 @@
     "rootNamespace": "FogboundMaze",
     "references": [
         "Unity.InputSystem",
-        "Unity.UGUI"
+        "Unity.UGUI",
+        "Unity.TextMeshPro"
     ]
 }

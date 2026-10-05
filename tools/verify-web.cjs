@@ -33,6 +33,18 @@ async function main() {
     const box=await canvas.boundingBox();
     const click=async(x,y) => {await page.mouse.click(box.x+box.width*x,box.y+box.height*y);await page.waitForTimeout(600);};
     await page.screenshot({path:path.join(output,game+'-web-title.png')});
+    await click(game==='fogbound'?.48:.22,game==='fogbound'?.855:.785);
+    await page.screenshot({path:path.join(output,game+'-web-settings-zh.png')});
+    await click(.75,.265);
+    await click(.60,.52);
+    await click(.80,.395);
+    await page.screenshot({path:path.join(output,game+'-web-settings-en-muted.png')});
+    await click(.24,.90);
+    await click(game==='fogbound'?.48:.22,game==='fogbound'?.855:.785);
+    await page.screenshot({path:path.join(output,game+'-web-settings-reopened.png')});
+    await click(.53,.265);
+    await click(.80,.395);
+    await click(.24,.90);
     if(game==='fogbound') {
       await click(.20,.745);
       await click(.25,.34);

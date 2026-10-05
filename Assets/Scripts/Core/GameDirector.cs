@@ -57,6 +57,7 @@ namespace FogboundMaze
 
         private void Update()
         {
+            if (PortfolioSettings.IsOpen) return;
             if (input.PausePressed && (Phase == GamePhase.LevelSelect || Phase == GamePhase.Guide)) ShowTitle();
             if (Phase == GamePhase.Staging)
             {

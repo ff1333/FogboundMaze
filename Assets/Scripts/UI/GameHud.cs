@@ -392,6 +392,7 @@ namespace FogboundMaze
             text.resizeTextForBestFit = true;
             text.resizeTextMinSize = 14;
             text.resizeTextMaxSize = size;
+            LocalizedLabel.Attach(root);
             return text;
         }
 
