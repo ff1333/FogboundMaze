@@ -73,12 +73,12 @@ namespace FogboundMaze.Tests
             var game = GameDirector.Instance;
             game.ShowLevelSelection();
             game.SelectLevel(1);
-            game.SelectWeapon(WeaponType.Pistol);
+            game.SelectWeapon(WeaponType.SubmachineGun);
             game.BeginRun();
             game.Player.Health.Damage(200f);
             Assert.That(game.Progress.IsUnlocked(2), Is.False);
             game.Retry();
-            game.SelectWeapon(WeaponType.Pistol);
+            game.SelectWeapon(WeaponType.SubmachineGun);
             game.BeginRun();
             game.CompleteLevel();
             Assert.That(game.Progress.IsCompleted(1), Is.True);
@@ -91,7 +91,7 @@ namespace FogboundMaze.Tests
             Assert.That(game.Progress.IsUnlocked(2), Is.True);
             Assert.That(game.Progress.IsUnlocked(3), Is.False);
             Assert.That(game.SelectLevel(2), Is.True);
-            game.SelectWeapon(WeaponType.Machete);
+            game.SelectWeapon(WeaponType.LongBlade);
             game.SetPaused(true);
             game.Hud.transform.Find("Pause/Levels").GetComponent<Button>().onClick.Invoke();
             Assert.That(game.Phase, Is.EqualTo(GamePhase.LevelSelect));
@@ -114,6 +114,51 @@ namespace FogboundMaze.Tests
             Assert.That(progress.IsUnlocked(2), Is.False);
             progress.Complete(10);
             Assert.That(progress.CompletedCount, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator GuideShowsEveryChapterWithoutUnlocking_AndEffectsStayBounded()
+        {
+            var game = GameDirector.Instance;
+            game.Hud.transform.Find("Title Screen/Guide").GetComponent<Button>().onClick.Invoke();
+            Assert.That(game.Phase, Is.EqualTo(GamePhase.Guide));
+            var guide = game.Hud.transform.Find("Field Guide");
+            for (var i = 1; i <= 10; i++)
+            {
+                guide.Find("Chapter " + i).GetComponent<Button>().onClick.Invoke();
+                Assert.That(guide.Find("Chapter Title").GetComponent<Text>().text, Does.StartWith(i.ToString("00")));
+            }
+            Assert.That(game.Progress.IsUnlocked(2), Is.False);
+            Assert.That(game.SelectLevel(1), Is.False);
+            guide.Find("Back").GetComponent<Button>().onClick.Invoke();
+            Assert.That(game.Phase, Is.EqualTo(GamePhase.Title));
+            var effects = CombatEffects.Ensure();
+            for (var i = 0; i < 200; i++) CombatEffects.Tracer(Vector3.zero,Vector3.forward);
+            Assert.That(effects.GetComponentsInChildren<LineRenderer>().Length,Is.EqualTo(64));
+            yield return new WaitForSeconds(.25f);
+            Assert.That(effects.ActiveStrokeCount,Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator ReloadFeedbackCompletes_AndLeavingRunClearsTransientState()
+        {
+            var game = GameDirector.Instance;
+            game.ShowLevelSelection(); game.SelectLevel(1); game.SelectWeapon(WeaponType.SubmachineGun);
+            var weapon = game.Player.Weapon;
+            weapon.Tick(false,true,false);
+            Assert.That(weapon.Ammunition,Is.EqualTo(29));
+            weapon.Tick(false,false,true);
+            Assert.That(weapon.IsReloading,Is.True);
+            yield return new WaitForSeconds(1.5f);
+            Assert.That(weapon.Ammunition,Is.EqualTo(30));
+            Assert.That(weapon.IsReloading,Is.False);
+            weapon.Tick(false,true,false);
+            weapon.Tick(false,false,true);
+            game.ShowTitle();
+            yield return new WaitForSeconds(1.3f);
+            Assert.That(weapon.Type,Is.EqualTo(WeaponType.None));
+            Assert.That(weapon.IsReloading,Is.False);
+            Assert.That(CombatEffects.Ensure().ActiveStrokeCount,Is.Zero);
         }
 
         [UnityTest]
@@ -156,7 +201,7 @@ namespace FogboundMaze.Tests
             var game = GameDirector.Instance;
             game.ShowLevelSelection();
             game.SelectLevel(1);
-            game.SelectWeapon(WeaponType.Pistol);
+            game.SelectWeapon(WeaponType.SubmachineGun);
             game.BeginRun();
             game.enabled = false;
             var pool = Object.FindFirstObjectByType<EnemyPool>();

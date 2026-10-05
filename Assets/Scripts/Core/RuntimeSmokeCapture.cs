@@ -21,19 +21,46 @@ namespace FogboundMaze
             var levels = System.Array.Exists(arguments, value => value == "-fogboundLevels");
             var loadout = System.Array.Exists(arguments, value => value == "-fogboundLoadout");
             var actors = System.Array.Exists(arguments, value => value == "-fogboundActors");
+            var guide = System.Array.Exists(arguments, value => value == "-fogboundGuide");
+            var combat = System.Array.Exists(arguments, value => value == "-fogboundCombat");
+            var reload = System.Array.Exists(arguments, value => value == "-fogboundReload");
+            var levelNumber = int.TryParse(ReadArgument(arguments, "-fogboundLevel"), out var requestedLevel)
+                ? Mathf.Clamp(requestedLevel, 1, 10) : 1;
             yield return new WaitForSecondsRealtime(1f);
+            var previousLanguage=PortfolioSettings.Chinese;
+            PortfolioSettings.SetLanguage(!System.Array.Exists(arguments,value=>value=="-english"));
+            yield return null;
+            if(System.Array.Exists(arguments,value=>value=="-settings")) { PortfolioSettingsMenu.Instance.Open();yield return null; }
+            if (Application.version != ReleaseVersion.Current)
+            {
+                Debug.LogError($"FOGBOUND_VERSION_FAIL expected={ReleaseVersion.Current} actual={Application.version}");
+                Application.Quit(2);
+                yield break;
+            }
+            Debug.Log($"FOGBOUND_VERSION_PASS {Application.version}");
+            if (guide)
+            {
+                GameDirector.Instance.ShowGuide();
+                GameDirector.Instance.Hud.transform.Find("Field Guide/Chapter 7")
+                    .GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            }
 
             if (levels || loadout || pause || gameplay || actors)
             {
                 GameDirector.Instance.ShowLevelSelection();
-                if (!levels) GameDirector.Instance.SelectLevel(1);
+                if (!levels)
+                {
+                    for (var completed = 1; completed < levelNumber; completed++)
+                        GameDirector.Instance.Progress.Complete(completed);
+                    GameDirector.Instance.SelectLevel(levelNumber);
+                }
                 yield return null;
             }
 
             if (actors)
             {
                 var director = GameDirector.Instance;
-                director.SelectWeapon(machete ? WeaponType.Machete : WeaponType.Pistol);
+                director.SelectWeapon(machete ? WeaponType.LongBlade : WeaponType.SubmachineGun);
                 var pool = FindFirstObjectByType<EnemyPool>();
                 foreach (var elite in new[] { false, true })
                 {
@@ -47,14 +74,14 @@ namespace FogboundMaze
             if (pause)
             {
                 var director = GameDirector.Instance;
-                director.SelectWeapon(WeaponType.Pistol);
+                director.SelectWeapon(WeaponType.SubmachineGun);
                 director.SetPaused(true);
                 yield return new WaitForSecondsRealtime(0.5f);
             }
             else if (gameplay)
             {
                 var director = GameDirector.Instance;
-                director.SelectWeapon(machete ? WeaponType.Machete : WeaponType.Pistol);
+                director.SelectWeapon(machete ? WeaponType.LongBlade : WeaponType.SubmachineGun);
                 if (!walkRoute)
                     director.Player.GetComponent<CharacterController>().Move(Vector3.forward * 3.5f);
                 yield return null;
@@ -129,12 +156,41 @@ namespace FogboundMaze
 
             if (!string.IsNullOrWhiteSpace(output))
             {
+                if (reload)
+                {
+                    var weapon = GameDirector.Instance.Player.Weapon;
+                    weapon.Tick(true, false, false);
+                    weapon.Tick(false, false, true);
+                    yield return new WaitForSeconds(1.45f);
+                    if (weapon.IsReloading || !weapon.ReloadReady || weapon.Ammunition != 30)
+                    {
+                        Debug.LogError("FOGBOUND_RELOAD_FAIL");
+                        Application.Quit(2);
+                        yield break;
+                    }
+                    Debug.Log("FOGBOUND_RELOAD_PASS ammo=30 ready=true");
+                    Time.timeScale = 0f;
+                    yield return null;
+                }
+                if (combat)
+                {
+                    GameDirector.Instance.Player.Weapon.Tick(true,true,false);
+                    if (machete) yield return new WaitForSeconds(.15f);
+                    Time.timeScale = 0f;
+                    yield return null;
+                }
                 Directory.CreateDirectory(Path.GetDirectoryName(output));
-                ScreenCapture.CaptureScreenshot(output, 1);
-                yield return new WaitForSecondsRealtime(1f);
+                CaptureFrame(output);
+                if (!File.Exists(output))
+                {
+                    Debug.LogError("FOGBOUND_SCREENSHOT_FAIL " + output);
+                    Application.Quit(2);
+                    yield break;
+                }
             }
 
             Debug.Log($"FOGBOUND_RUNTIME_SMOKE_PASS mode={(pause ? "pause" : gameplay ? "gameplay" : "staging")} screenshot={output}");
+            PortfolioSettings.SetLanguage(previousLanguage);
             Application.Quit(0);
         }
 
@@ -145,6 +201,34 @@ namespace FogboundMaze
                 if (arguments[i] == name) return arguments[i + 1];
             }
             return string.Empty;
+        }
+
+        private static void CaptureFrame(string output)
+        {
+            // Render explicitly so a hidden/background smoke-test window still produces evidence.
+            var camera = GameDirector.Instance.CameraRig.Camera;
+            foreach(var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = camera;
+                canvas.planeDistance = .31f;
+            }
+            Canvas.ForceUpdateCanvases();
+            foreach(var label in FindObjectsByType<LocalizedLabel>(FindObjectsSortMode.None)) label.Refresh();
+            Canvas.ForceUpdateCanvases();
+            var target = new RenderTexture(Screen.width, Screen.height, 24);
+            var previous = RenderTexture.active;
+            camera.targetTexture = target;
+            camera.Render();
+            RenderTexture.active = target;
+            var texture = new Texture2D(target.width,target.height,TextureFormat.RGB24,false);
+            texture.ReadPixels(new Rect(0,0,target.width,target.height),0,0);
+            texture.Apply();
+            File.WriteAllBytes(output, texture.EncodeToPNG());
+            camera.targetTexture = null;
+            RenderTexture.active = previous;
+            Destroy(target);
+            Destroy(texture);
         }
     }
 }

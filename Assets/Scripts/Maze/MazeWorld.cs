@@ -122,6 +122,16 @@ namespace FogboundMaze
                 new Vector3(0f, 0.49f, 0f), new Vector3(1.02f, 0.04f, 1.02f), trimMaterial, false).isStatic = true;
             RuntimeArt.Primitive(PrimitiveType.Cube, "Wall Base", wall.transform,
                 new Vector3(0f, -0.42f, 0f), new Vector3(1.02f, 0.055f, 1.02f), wallBaseMaterial, false).isStatic = true;
+            // Shallow supports add depth without narrowing any walkable corridor.
+            var alongX = scale.x > scale.z;
+            foreach (var offset in new[] { -2.2f, 2.2f })
+            {
+                var support = center + Vector3.up * WallHeight * .5f
+                    + (alongX ? Vector3.right : Vector3.forward) * offset;
+                RuntimeArt.Primitive(PrimitiveType.Cube,"Wall Support",generatedRoot,support,
+                    alongX ? new Vector3(.13f,WallHeight,.36f) : new Vector3(.36f,WallHeight,.13f),
+                    wallBaseMaterial,false).isStatic = true;
+            }
         }
 
         private void CreateStagingArea()
@@ -244,16 +254,8 @@ namespace FogboundMaze
 
         private void CreateSafeLights(LevelDefinition level)
         {
-            var path = MazePathfinder.FindPath(Layout, Layout.Start, Layout.Goal);
-            var spacing = Mathf.Max(3, Mathf.RoundToInt(level.safeLightRadius / CellSize * 1.4f));
-            for (var i = 0; i < path.Count; i += spacing)
-            {
-                CreateSafeLight(CellToWorld(path[i]));
-            }
-            if (safeLights.Count == 0 || Vector3.Distance(safeLights[^1], CellToWorld(Layout.Goal)) > level.safeLightRadius)
-            {
-                CreateSafeLight(CellToWorld(Layout.Goal));
-            }
+            foreach (var cell in SafeLightLayout.Generate(Layout, level.seed))
+                CreateSafeLight(CellToWorld(cell));
         }
 
         private void CreateSafeLight(Vector3 position)

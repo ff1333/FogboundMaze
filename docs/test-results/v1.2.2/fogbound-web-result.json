@@ -1,0 +1,20 @@
+{
+  "game": "fogbound",
+  "errors": [],
+  "canvas": {
+    "x": 160,
+    "y": 79,
+    "width": 960,
+    "height": 600
+  },
+  "screenshots": [
+    "fogbound-web-gameplay.png",
+    "fogbound-web-guide.png",
+    "fogbound-web-loadout.png",
+    "fogbound-web-pause.png",
+    "fogbound-web-ready.png",
+    "fogbound-web-reloading.png",
+    "fogbound-web-title.png"
+  ],
+  "note": "Automated Edge interaction; screenshots require visual review. Not an Android device test or subjective audio audition."
+}

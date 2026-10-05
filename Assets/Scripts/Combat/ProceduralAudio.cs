@@ -6,8 +6,34 @@ namespace FogboundMaze
     {
         private static AudioClip pistol;
         private static AudioClip machete;
+        private static AudioClip impact;
+        private static AudioClip reload;
+        private static AudioClip reloadComplete;
+        public static AudioClip Impact => impact ??= Create("Hit Confirm", .075f, 240f, 900f, .65f, 103);
+        public static AudioClip Reload => reload ??= Create("Magazine", .13f, 110f, 1800f, .8f, 221);
+        public static AudioClip ReloadComplete => reloadComplete ??= CreateReloadComplete();
 
-        public static AudioClip Pistol => pistol ??= Create("Pistol", 0.11f, 125f, 730f, 0.36f, 37);
+        private static AudioClip CreateReloadComplete()
+        {
+            const int rate = 22050;
+            var samples = new float[Mathf.CeilToInt(rate * .28f)];
+            var random = new System.Random(712);
+            for (var i = 0; i < samples.Length; i++)
+            {
+                var time = i / (float)rate;
+                var first = time < .065f ? Mathf.Exp(-65f * time) : 0f;
+                var secondTime = time - .10f;
+                var second = secondTime >= 0f ? Mathf.Exp(-32f * secondTime) : 0f;
+                var noise = (float)random.NextDouble() * 2f - 1f;
+                samples[i] = .55f * first * noise
+                    + .5f * second * (Mathf.Sin(secondTime * 1500f * Mathf.PI * 2f) * .7f + noise * .3f);
+            }
+            var clip = AudioClip.Create("Reload Complete - Bolt Ready", samples.Length, 1, rate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        public static AudioClip SubmachineGun => pistol ??= Create("SMG", 0.085f, 95f, 950f, 0.55f, 37);
         public static AudioClip Machete => machete ??= Create("Machete", 0.18f, 90f, 230f, 0.24f, 91);
 
         private static AudioClip Create(string name, float duration, float low, float high, float noiseMix, int seed)

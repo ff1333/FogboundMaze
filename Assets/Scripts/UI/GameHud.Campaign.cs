@@ -20,15 +20,18 @@ namespace FogboundMaze
             var subtitle = Label("Campaign", titlePanel.transform, "SURVIVAL CAMPAIGN", 27, TextAnchor.MiddleLeft, Accent);
             SetRect(subtitle.rectTransform, new Vector2(0.08f, 0.45f), new Vector2(0.50f, 0.51f));
             var start = Button("Start", titlePanel.transform, "START", Accent);
-            SetRect(start.GetComponent<RectTransform>(), new Vector2(0.08f, 0.30f), new Vector2(0.32f, 0.39f));
+            SetRect(start.GetComponent<RectTransform>(), new Vector2(0.08f, 0.32f), new Vector2(0.32f, 0.41f));
             start.onClick.AddListener(() => GameDirector.Instance.ShowLevelSelection());
+            var guide = Button("Guide", titlePanel.transform, "FIELD GUIDE", new Color(.19f,.28f,.30f));
+            SetRect(guide.GetComponent<RectTransform>(), new Vector2(.08f,.21f), new Vector2(.32f,.30f));
+            guide.onClick.AddListener(() => GameDirector.Instance.ShowGuide());
             if (Application.platform != RuntimePlatform.WebGLPlayer)
             {
                 var quit = Button("Quit", titlePanel.transform, "QUIT", new Color(0.14f, 0.19f, 0.20f));
-                SetRect(quit.GetComponent<RectTransform>(), new Vector2(0.08f, 0.18f), new Vector2(0.32f, 0.27f));
+                SetRect(quit.GetComponent<RectTransform>(), new Vector2(0.08f, 0.10f), new Vector2(0.32f, 0.19f));
                 quit.onClick.AddListener(() => GameDirector.Instance.QuitGame());
             }
-            var version = Label("Version", titlePanel.transform, "v" + Application.version, 20, TextAnchor.MiddleRight, new Color(0.70f, 0.77f, 0.76f));
+            var version = Label("Version", titlePanel.transform, "v" + ReleaseVersion.Display, 20, TextAnchor.MiddleRight, new Color(0.70f, 0.77f, 0.76f));
             SetRect(version.rectTransform, new Vector2(0.7f, 0.025f), new Vector2(0.95f, 0.075f));
 
             levelPanel = PanelObject("Level Select", transform, new Color(0.025f, 0.04f, 0.045f, 0.94f));
@@ -58,6 +61,7 @@ namespace FogboundMaze
             var back = Button("Back", levelPanel.transform, "BACK", new Color(0.16f, 0.22f, 0.23f));
             SetRect(back.GetComponent<RectTransform>(), new Vector2(0.08f, 0.10f), new Vector2(0.26f, 0.18f));
             back.onClick.AddListener(() => GameDirector.Instance.ShowTitle());
+            BuildGuide();
             HideCampaignMenu();
         }
 
@@ -73,6 +77,7 @@ namespace FogboundMaze
             if (mobileRoot != null) mobileRoot.SetActive(false);
             titlePanel.SetActive(phase == GamePhase.Title);
             levelPanel.SetActive(phase == GamePhase.LevelSelect);
+            guidePanel.SetActive(phase == GamePhase.Guide);
             campaignSummary.text = $"{progress.CompletedCount:00} / 10 CLEARED";
             for (var i = 0; i < 10; i++)
             {
@@ -91,6 +96,7 @@ namespace FogboundMaze
         {
             if (titlePanel != null) titlePanel.SetActive(false);
             if (levelPanel != null) levelPanel.SetActive(false);
+            if (guidePanel != null) guidePanel.SetActive(false);
         }
     }
 }

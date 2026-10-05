@@ -43,8 +43,10 @@ namespace FogboundMaze
             Instance = this;
             levels = LevelCatalog.CreateDefault();
             var smoke = System.Array.Exists(System.Environment.GetCommandLineArgs(), value => value == "-fogboundSmoke");
+            if (smoke) Application.runInBackground = true;
             Progress = new CampaignProgress(smoke);
             BuildPersistentSystems();
+            CombatEffects.Ensure();
             LoadLevel(1);
             ShowTitle();
             if (smoke)
@@ -55,7 +57,8 @@ namespace FogboundMaze
 
         private void Update()
         {
-            if (input.PausePressed && Phase == GamePhase.LevelSelect) ShowTitle();
+            if (PortfolioSettings.IsOpen) return;
+            if (input.PausePressed && (Phase == GamePhase.LevelSelect || Phase == GamePhase.Guide)) ShowTitle();
             if (Phase == GamePhase.Staging)
             {
                 if (player.Weapon.Type != WeaponType.None
@@ -142,7 +145,7 @@ namespace FogboundMaze
 
         public void Retry()
         {
-            if (Phase is GamePhase.Title or GamePhase.LevelSelect) return;
+            if (Phase is GamePhase.Title or GamePhase.LevelSelect or GamePhase.Guide) return;
             LoadLevel(currentLevel);
         }
 
@@ -162,10 +165,12 @@ namespace FogboundMaze
         }
 
         public void ShowTitle() => ShowMenu(GamePhase.Title);
+        public void ShowGuide() => ShowMenu(GamePhase.Guide);
         public void ShowLevelSelection() => ShowMenu(GamePhase.LevelSelect);
 
         private void ShowMenu(GamePhase phase)
         {
+            CombatEffects.Clear();
             Time.timeScale = 1f;
             runGeneration++;
             pool.DespawnAll();
@@ -208,6 +213,7 @@ namespace FogboundMaze
 
         private void LoadLevel(int number)
         {
+            CombatEffects.Clear();
             Time.timeScale = 1f;
             runGeneration++;
             input.ResetMobile();

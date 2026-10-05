@@ -1,0 +1,8 @@
+Final v1.2.2 builds, Unity 6000.3.18f1, 2026-10-04
+FOGBOUND_PLATFORM_BUILD target=StandaloneWindows64 result=Succeeded errors=0 warnings=0 size=96343134
+FOGBOUND_PLATFORM_BUILD target=WebGL result=Succeeded errors=0 warnings=0 size=12254834
+FOGBOUND_PLATFORM_BUILD target=Android result=Succeeded errors=0 warnings=0 size=454632479
+package: name='com.ff1333.fogboundmaze' versionCode='8' versionName='1.2.2' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+sdkVersion:'25'
+targetSdkVersion:'36'
+native-code: 'arm64-v8a'

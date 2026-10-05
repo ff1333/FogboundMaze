@@ -1,0 +1,3 @@
+3fedd6a8c03b309ee211365f012ccdcd5dd9b0bc9330e4264ce03a295be58dcd  FogboundMaze-Windows-v1.2.0.zip
+6d6f9bba1bcd2c9cdcd584703d2cab01022bdcbdff59fef28720ebdaf7541b37  FogboundMaze-WebGL-v1.2.0.zip
+f761cc955bec7206531a876a4057c6deb7b76860e32b40497a21556728af88f5  FogboundMaze-Android-v1.2.0.apk

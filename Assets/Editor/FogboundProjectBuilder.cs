@@ -88,7 +88,7 @@ public static class FogboundProjectBuilder
     {
         PlayerSettings.companyName = "FF1333";
         PlayerSettings.productName = "Fogbound Maze";
-        PlayerSettings.bundleVersion = "1.1.0";
+        PlayerSettings.bundleVersion = FogboundMaze.ReleaseVersion.Current;
         PlayerSettings.defaultScreenWidth = 1280;
         PlayerSettings.defaultScreenHeight = 720;
         PlayerSettings.defaultIsFullScreen = false;

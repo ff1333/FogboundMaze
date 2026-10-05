@@ -1,8 +1,10 @@
 # Fogbound Maze
 
+Current candidate: **v1.3.0**. Chinese is the default UI language; the title-screen Settings menu supports English, mute, master/music/effects volume and local persistence. See [the settings guide and development log](docs/13_V1_3_0_SETTINGS.md) and [verification evidence](docs/test-results/v1.3.0/README.md). All earlier maze, lighting, reload and combat improvements are retained.
+
 Fogbound Maze is a Unity 6 third-person and first-person survival maze game.
 The player starts at the title screen, selects an unlocked level, then chooses
-a pistol or machete outside a procedurally generated maze,
+an SMG or long blade outside a procedurally generated maze,
 enters through the start gate, survives zombie attacks, and reaches the exit.
 
 ## Portfolio Scope
@@ -32,13 +34,22 @@ under `docs/`.
 
 ## Screenshots
 
-![Title screen](docs/images/v1.1.0-title.png)
+![v1.3.0 title screen](docs/test-results/v1.3.0/native/v1.3.0-title-zh.png)
+
+![Language and audio settings](docs/test-results/v1.3.0/native/v1.3.0-settings-en.png)
 
 ![Sequential level selection](docs/images/v1.1.0-levels.png)
 
 ![Survivor and zombies](docs/images/v1.1.0-actors.png)
 
-## Release Status
+## Current Validation
+
+- EditMode: **15/15 PASS**; PlayMode: **34/34 PASS**.
+- Platform results and device-testing limitations: [v1.2.2 evidence](docs/test-results/v1.2.2/README.md).
+- Current development log: [safe lights and reload feedback](docs/devlogs/10-safe-lights-and-reload-feedback.md).
+- Release attachments: `Builds/Packages/v1.2.2/` (ignored by Git).
+
+## Historical v1.1.0 Results
 
 - Local version: `v1.1.0` campaign menus and animated character art
 - EditMode tests: `10/10 PASS`

@@ -1,6 +1,10 @@
 # Fogbound Maze 文档入口
 
-当前版本 **v1.1.0**，现在只需先看 [09_V1_1_0_MENU_AND_CHARACTERS.md](09_V1_1_0_MENU_AND_CHARACTERS.md)：开始界面、十关选择、本地通关记录、新角色，以及复测和发布步骤。
+**当前 v1.2.2：先看 [12_V1_2_2_LIGHTS_AND_RELOAD.md](12_V1_2_2_LIGHTS_AND_RELOAD.md)。** 避难灯不再指向出口，装弹完成增加声音与 READY 提示。
+v1.2.1 的右手冲锋枪、长刀与命中反馈见 [11_V1_2_1_WEAPONS.md](11_V1_2_1_WEAPONS.md)。
+v1.2.0 的图鉴和表现优化见 [10_V1_2_0_POLISH.md](10_V1_2_0_POLISH.md)，后面的 v1.1.0 说明均为历史。
+
+历史版本 **v1.1.0** 见 [09_V1_1_0_MENU_AND_CHARACTERS.md](09_V1_1_0_MENU_AND_CHARACTERS.md)：开始界面、十关选择、本地通关记录、新角色，以及当时的复测和发布步骤。
 本次开发日志见 [devlogs/07-campaign-menu-and-character-art.md](devlogs/07-campaign-menu-and-character-art.md)。
 `08_V1_0_3_HUD_AND_BRANCHES.md` 是上一版血条、死亡显示和迷宫分岔的历史记录。
 上一版入口/防掉落的历史记录见 `07_V1_0_2_ENTRY_FIX.md`，本次继续保留并通过实体通路回归。
